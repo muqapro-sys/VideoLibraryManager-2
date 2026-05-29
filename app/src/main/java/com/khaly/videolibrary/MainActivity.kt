@@ -79,6 +79,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.core.content.PermissionChecker
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -211,59 +214,82 @@ fun OneUiLargeHeader(
         modifier = Modifier
             .fillMaxWidth()
             .statusBarsPadding()
-            .padding(start = 24.dp, end = 24.dp, top = 18.dp, bottom = 8.dp)
+            .padding(start = 12.dp, end = 12.dp, top = 18.dp, bottom = 22.dp)
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f)) {
-                Text(
-                    text = when (state.selectedTab) {
-                        1 -> "Folders"
-                        2 -> "Favorites"
-                        else -> "Videos"
-                    },
-                    style = MaterialTheme.typography.displaySmall,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-                Text(
-                    text = "${state.videos.size} videos • ${state.folders.size} folders",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = if (state.viewMode == ViewMode.GRID) "☷" else "▦",
+                fontSize = 30.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .padding(horizontal = 12.dp)
+                    .clickable { onToggleView() }
+            )
 
-            OneUiPillButton(text = if (state.viewMode == ViewMode.GRID) "List" else "Grid", onClick = onToggleView)
-            Spacer(Modifier.width(8.dp))
+            Text(
+                text = "⌕",
+                fontSize = 34.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .padding(horizontal = 12.dp)
+                    .clickable { }
+            )
+
             SortPill(sortMode = state.sortMode, onSortChanged = onSortChanged)
         }
 
-        Spacer(Modifier.height(18.dp))
+        Spacer(Modifier.height(64.dp))
 
-        OutlinedTextField(
-            value = state.query,
-            onValueChange = onQueryChanged,
+        Text(
+            text = when (state.selectedTab) {
+                1 -> "Folders"
+                2 -> "Favorites"
+                else -> "Video"
+            },
             modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            shape = RoundedCornerShape(28.dp),
-            label = { Text("Search videos") },
-            placeholder = { Text("File name, folder, format") },
-            colors = TextFieldDefaults.colors(
-                focusedContainerColor = MaterialTheme.colorScheme.surface,
-                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                focusedIndicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.45f),
-                unfocusedIndicatorColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.35f)
-            )
+            textAlign = TextAlign.Center,
+            fontSize = 56.sp,
+            fontWeight = FontWeight.Light,
+            color = MaterialTheme.colorScheme.onBackground
         )
 
-        Spacer(Modifier.height(10.dp))
+        Spacer(Modifier.height(6.dp))
 
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            QuickStatChip("Recent", state.videos.take(20).size.toString())
-            QuickStatChip("Favorites", state.favorites.size.toString())
-            QuickStatChip("Storage", formatSize(state.videos.sumOf { it.sizeBytes }))
+        Text(
+            text = when (state.selectedTab) {
+                1 -> "${state.folders.size} Folders"
+                2 -> "${state.favorites.size} Favorites"
+                else -> "${state.videos.size} Videos"
+            },
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Normal,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Spacer(Modifier.height(30.dp))
+
+        if (state.query.isNotBlank()) {
+            OutlinedTextField(
+                value = state.query,
+                onValueChange = onQueryChanged,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp),
+                singleLine = true,
+                shape = RoundedCornerShape(22.dp),
+                label = { Text("Search videos") }
+            )
         }
     }
 }
+
+
 
 @Composable
 fun OneUiPillButton(text: String, onClick: () -> Unit) {
@@ -323,16 +349,15 @@ fun QuickStatChip(label: String, value: String) {
 fun OneUiBottomNav(selected: Int, onSelect: (Int) -> Unit) {
     Surface(
         modifier = Modifier
-            .padding(horizontal = 16.dp, vertical = 10.dp)
-            .navigationBarsPadding()
-            .fillMaxWidth(),
-        shape = RoundedCornerShape(32.dp),
-        color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 4.dp,
-        shadowElevation = 4.dp
+            .fillMaxWidth()
+            .navigationBarsPadding(),
+        color = MaterialTheme.colorScheme.background,
+        tonalElevation = 0.dp,
+        shadowElevation = 0.dp
     ) {
         NavigationBar(
-            containerColor = MaterialTheme.colorScheme.surface,
+            modifier = Modifier.height(76.dp),
+            containerColor = MaterialTheme.colorScheme.background,
             tonalElevation = 0.dp
         ) {
             val items = listOf(
@@ -345,13 +370,27 @@ fun OneUiBottomNav(selected: Int, onSelect: (Int) -> Unit) {
                 NavigationBarItem(
                     selected = selected == item.third,
                     onClick = { onSelect(item.third) },
-                    icon = { Text(item.first, style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.ExtraBold) },
-                    label = { Text(item.second) }
+                    icon = {
+                        Text(
+                            item.first,
+                            fontSize = 28.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    },
+                    label = {
+                        Text(
+                            item.second,
+                            fontSize = 15.sp,
+                            fontWeight = if (selected == item.third) FontWeight.Bold else FontWeight.Normal
+                        )
+                    }
                 )
             }
         }
     }
 }
+
+
 
 @Composable
 fun VideosScreen(
@@ -369,9 +408,9 @@ fun VideosScreen(
     if (viewMode == ViewMode.GRID) {
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
-            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 10.dp, bottom = 18.dp),
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+            contentPadding = PaddingValues(start = 12.dp, end = 12.dp, top = 0.dp, bottom = 18.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalArrangement = Arrangement.spacedBy(18.dp)
         ) {
             items(videos, key = { it.id }) { video ->
                 VideoGridCard(
@@ -384,7 +423,7 @@ fun VideosScreen(
         }
     } else {
         LazyColumn(
-            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 10.dp, bottom = 18.dp),
+            contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 0.dp, bottom = 18.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             items(videos, key = { it.id }) { video ->
@@ -398,6 +437,8 @@ fun VideosScreen(
         }
     }
 }
+
+
 
 @Composable
 fun VideoThumbnail(
@@ -454,68 +495,65 @@ fun VideoGridCard(
     onOpen: () -> Unit,
     onFavorite: () -> Unit
 ) {
-    ElevatedCard(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onOpen() },
-        shape = RoundedCornerShape(28.dp),
-        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 1.5.dp)
+            .clickable { onOpen() }
     ) {
-        Column {
-            Box {
-                VideoThumbnail(
-                    video = video,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(150.dp)
-                        .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
-                )
-                Surface(
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(9.dp),
-                    color = MaterialTheme.colorScheme.scrim.copy(alpha = 0.68f),
-                    shape = RoundedCornerShape(100.dp)
-                ) {
-                    Text(
-                        text = formatDuration(video.durationMs),
-                        color = MaterialTheme.colorScheme.inverseOnSurface,
-                        modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp),
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-                Surface(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(9.dp),
-                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.86f),
-                    shape = RoundedCornerShape(100.dp),
-                    onClick = onFavorite
-                ) {
-                    Text(
-                        text = if (favorite) "★" else "☆",
-                        modifier = Modifier.padding(horizontal = 9.dp, vertical = 5.dp),
-                        color = if (favorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-                    )
-                }
-            }
+        Box {
+            VideoThumbnail(
+                video = video,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(126.dp)
+                    .clip(RoundedCornerShape(2.dp))
+            )
 
-            Column(Modifier.padding(start = 12.dp, end = 12.dp, top = 10.dp, bottom = 12.dp)) {
-                Text(video.name, maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Bold)
-                Spacer(Modifier.height(3.dp))
+            Surface(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(5.dp),
+                color = Color.Black.copy(alpha = 0.62f),
+                shape = RoundedCornerShape(2.dp)
+            ) {
                 Text(
-                    "${formatSize(video.sizeBytes)} • ${video.folderName}",
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodySmall
+                    text = formatDuration(video.durationMs),
+                    color = Color.White,
+                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Normal
                 )
             }
         }
+
+        Spacer(Modifier.height(7.dp))
+
+        Text(
+            text = video.name,
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Normal,
+            color = MaterialTheme.colorScheme.onBackground
+        )
+
+        Spacer(Modifier.height(3.dp))
+
+        Text(
+            text = "${formatDuration(video.durationMs)} • ${formatSize(video.sizeBytes)} • ${video.width}×${video.height}",
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            fontSize = 12.sp,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
+
+
 
 @Composable
 fun VideoListCard(
@@ -524,45 +562,59 @@ fun VideoListCard(
     onOpen: () -> Unit,
     onFavorite: () -> Unit
 ) {
-    ElevatedCard(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onOpen() },
-        shape = RoundedCornerShape(26.dp),
-        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 1.dp)
+            .clickable { onOpen() }
+            .padding(vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            modifier = Modifier.padding(10.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            VideoThumbnail(
-                video = video,
-                modifier = Modifier
-                    .size(width = 112.dp, height = 74.dp)
-                    .clip(RoundedCornerShape(20.dp))
+        VideoThumbnail(
+            video = video,
+            modifier = Modifier
+                .size(width = 126.dp, height = 78.dp)
+                .clip(RoundedCornerShape(4.dp))
+        )
+
+        Spacer(Modifier.width(12.dp))
+
+        Column(Modifier.weight(1f)) {
+            Text(
+                video.name,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                fontSize = 17.sp,
+                fontWeight = FontWeight.Normal
             )
-            Spacer(Modifier.width(13.dp))
-            Column(Modifier.weight(1f)) {
-                Text(video.name, maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Bold)
-                Spacer(Modifier.height(3.dp))
-                Text("${formatDuration(video.durationMs)} • ${formatSize(video.sizeBytes)}", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text(video.folderName, maxLines = 1, overflow = TextOverflow.Ellipsis, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            Surface(
-                onClick = onFavorite,
-                shape = RoundedCornerShape(100.dp),
-                color = MaterialTheme.colorScheme.surfaceVariant
-            ) {
-                Text(
-                    text = if (favorite) "★" else "☆",
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                    color = if (favorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-                )
-            }
+
+            Spacer(Modifier.height(4.dp))
+
+            Text(
+                "${formatDuration(video.durationMs)} • ${formatSize(video.sizeBytes)} • ${video.width}×${video.height}",
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                fontSize = 13.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Text(
+                video.folderName,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                fontSize = 13.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
+
+        Text(
+            text = "⋮",
+            fontSize = 24.sp,
+            modifier = Modifier.padding(start = 8.dp)
+        )
     }
 }
+
+
 
 @Composable
 fun FoldersScreen(
