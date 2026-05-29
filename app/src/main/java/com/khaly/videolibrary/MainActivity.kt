@@ -84,6 +84,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.core.content.PermissionChecker
+import androidx.core.content.FileProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.rememberAsyncImagePainter
 import com.khaly.videolibrary.domain.SortMode
@@ -92,6 +93,7 @@ import com.khaly.videolibrary.domain.VideoItem
 import com.khaly.videolibrary.domain.ViewMode
 import com.khaly.videolibrary.ui.theme.OneUi85Theme
 import java.text.DecimalFormat
+import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
@@ -953,17 +955,40 @@ fun openVideoWithPreferredPlayer(context: Context, video: VideoItem) {
 }
 
 fun openVideoDirectly(context: Context, video: VideoItem) {
+    val shareUri = try {
+        val path = video.filePath
+        if (!path.isNullOrBlank()) {
+            val file = File(path)
+            if (file.exists()) {
+                FileProvider.getUriForFile(
+                    context,
+                    context.packageName + ".fileprovider",
+                    file
+                )
+            } else {
+                video.uri
+            }
+        } else {
+            video.uri
+        }
+    } catch (_: Exception) {
+        video.uri
+    }
+
     val intent = Intent(Intent.ACTION_VIEW).apply {
-        setDataAndType(video.uri, video.mimeType)
+        setDataAndType(shareUri, video.mimeType)
 
         putExtra(Intent.EXTRA_TITLE, video.name)
         putExtra(Intent.EXTRA_SUBJECT, video.name)
         putExtra(Intent.EXTRA_TEXT, video.name)
+        putExtra("title", video.name)
+        putExtra("filename", video.name)
+        putExtra("android.intent.extra.TITLE", video.name)
 
         clipData = android.content.ClipData.newUri(
             context.contentResolver,
             video.name,
-            video.uri
+            shareUri
         )
 
         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
@@ -972,9 +997,7 @@ fun openVideoDirectly(context: Context, video: VideoItem) {
     try {
         context.startActivity(intent)
     } catch (_: Exception) {
-        context.startActivity(
-            Intent.createChooser(intent, video.name)
-        )
+        context.startActivity(Intent.createChooser(intent, video.name))
     }
 }
 

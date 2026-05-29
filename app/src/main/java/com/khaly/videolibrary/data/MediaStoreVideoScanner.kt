@@ -22,7 +22,8 @@ class MediaStoreVideoScanner(
             MediaStore.Video.Media.BUCKET_DISPLAY_NAME,
             MediaStore.Video.Media.WIDTH,
             MediaStore.Video.Media.HEIGHT,
-            MediaStore.Video.Media.MIME_TYPE
+            MediaStore.Video.Media.MIME_TYPE,
+            MediaStore.Video.Media.DATA
         )
 
         val sortOrder = "${MediaStore.Video.Media.DATE_ADDED} DESC"
@@ -44,7 +45,8 @@ class MediaStoreVideoScanner(
             val folderColumn = cursor.getColumnIndexOrThrow(MediaStore.Video.Media.BUCKET_DISPLAY_NAME)
             val widthColumn = cursor.getColumnIndexOrThrow(MediaStore.Video.Media.WIDTH)
             val heightColumn = cursor.getColumnIndexOrThrow(MediaStore.Video.Media.HEIGHT)
-            val mimeColumn = cursor.getColumnIndexOrThrow(MediaStore.Video.Media.MIME_TYPE)
+            val mimeColumn = cursor.getColumnIndexOrThrow(MediaStore.Video.Media.MIME_TYPE,
+            MediaStore.Video.Media.DATA)
 
             while (cursor.moveToNext()) {
                 val id = cursor.getLong(idColumn)
@@ -62,7 +64,8 @@ class MediaStoreVideoScanner(
                         folderName = cursor.getString(folderColumn) ?: "Unknown",
                         width = cursor.getInt(widthColumn),
                         height = cursor.getInt(heightColumn),
-                        mimeType = cursor.getString(mimeColumn) ?: "video/*"
+                        mimeType = cursor.getString(mimeColumn) ?: "video/*",
+                        filePath = cursor.getString(dataColumn)
                     )
                 )
             }
