@@ -3,6 +3,7 @@ package com.khaly.videolibrary
 import android.Manifest
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ResolveInfo
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -38,6 +39,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Badge
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -85,6 +87,9 @@ import com.khaly.videolibrary.ui.theme.OneUi85Theme
 import java.text.DecimalFormat
 import java.util.concurrent.TimeUnit
 
+private const val PREFS_NAME = "video_library_prefs"
+private const val KEY_DEFAULT_PLAYER_PACKAGE = "default_video_player_package"
+
 class MainActivity : ComponentActivity() {
     private val viewModel: VideoLibraryViewModel by viewModels()
 
@@ -102,6 +107,7 @@ class MainActivity : ComponentActivity() {
 fun VideoLibraryApp(viewModel: VideoLibraryViewModel) {
     val context = LocalContext.current
     val state by viewModel.state.collectAsStateWithLifecycle()
+    var previewVideo by remember { mutableStateOf<VideoItem?>(null) }
 
     val permission = if (Build.VERSION.SDK_INT >= 33) {
         Manifest.permission.READ_MEDIA_VIDEO
@@ -161,7 +167,7 @@ fun VideoLibraryApp(viewModel: VideoLibraryViewModel) {
                         videos = state.filteredVideos,
                         favorites = state.favorites,
                         viewMode = state.viewMode,
-                        onOpen = { openVideoExternally(context, it) },
+                        onOpen = { previewVideo = it },
                         onFavorite = { viewModel.toggleFavorite(it.id) }
                     )
 
@@ -174,7 +180,7 @@ fun VideoLibraryApp(viewModel: VideoLibraryViewModel) {
                         videos = state.videos.filter { it.id in state.favorites },
                         favorites = state.favorites,
                         viewMode = state.viewMode,
-                        onOpen = { openVideoExternally(context, it) },
+                        onOpen = { previewVideo = it },
                         onFavorite = { viewModel.toggleFavorite(it.id) }
                     )
                 }
@@ -184,6 +190,14 @@ fun VideoLibraryApp(viewModel: VideoLibraryViewModel) {
                 selected = state.selectedTab,
                 onSelect = viewModel::setTab
             )
+
+            previewVideo?.let { video ->
+                VideoPreviewDialog(
+                    context = context,
+                    video = video,
+                    onDismiss = { previewVideo = null }
+                )
+            }
         }
     }
 }
@@ -334,7 +348,7 @@ fun OneUiBottomNav(selected: Int, onSelect: (Int) -> Unit) {
                 NavigationBarItem(
                     selected = selected == item.third,
                     onClick = { onSelect(item.third) },
-                    icon = { Text(item.first) },
+                    icon = { Text(item.first, style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.ExtraBold) },
                     label = { Text(item.second) }
                 )
             }
@@ -614,6 +628,200 @@ fun PermissionDeniedView(context: Context) {
                 }
             }
         }
+    }
+}
+
+@Composable
+fun VideoPreviewDialog(
+    context: Context,
+    video: VideoItem,
+    onDismiss: () -> Unit
+) {
+    var showPlayerPicker by remember { mutableStateOf(false) }
+    val defaultPackage = remember { getDefaultVideoPlayerPackage(context) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = video.name,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                fontWeight = FontWeight.ExtraBold
+            )
+        },
+        text = {
+            Column {
+                Image(
+                    painter = rememberAsyncImagePainter(video.uri),
+                    contentDescription = video.name,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(220.dp)
+                        .clip(RoundedCornerShape(26.dp)),
+                    contentScale = ContentScale.Crop
+                )
+
+                Spacer(Modifier.height(12.dp))
+
+                Text(
+                    text = "${formatDuration(video.durationMs)} • ${formatSize(video.sizeBytes)} • ${video.width}×${video.height}",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Text(
+                    text = video.folderName,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                Spacer(Modifier.height(14.dp))
+
+                Button(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = { showPlayerPicker = true }
+                ) {
+                    Text(
+                        if (defaultPackage.isNullOrBlank())
+                            "Choose default player for this library"
+                        else
+                            "Change default player"
+                    )
+                }
+
+                TextButton(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = {
+                        openVideoExternally(context, video)
+                        onDismiss()
+                    }
+                ) {
+                    Text("Open with system chooser")
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    openVideoWithPreferredPlayer(context, video)
+                    onDismiss()
+                }
+            ) {
+                Text("Open")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
+
+    if (showPlayerPicker) {
+        PlayerPickerDialog(
+            context = context,
+            video = video,
+            onDismiss = { showPlayerPicker = false },
+            onPlayerSelected = { packageName ->
+                saveDefaultVideoPlayerPackage(context, packageName)
+                showPlayerPicker = false
+            }
+        )
+    }
+}
+
+@Composable
+fun PlayerPickerDialog(
+    context: Context,
+    video: VideoItem,
+    onDismiss: () -> Unit,
+    onPlayerSelected: (String) -> Unit
+) {
+    val players = remember(video.uri) { listVideoPlayers(context, video) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Default video player") },
+        text = {
+            if (players.isEmpty()) {
+                Text("No external video players were found.")
+            } else {
+                LazyColumn(
+                    modifier = Modifier.height(320.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(players) { player ->
+                        val packageName = player.activityInfo.packageName
+                        val appName = player.loadLabel(context.packageManager).toString()
+
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onPlayerSelected(packageName) },
+                            shape = RoundedCornerShape(18.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
+                        ) {
+                            Text(
+                                text = appName,
+                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 13.dp),
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
+}
+
+fun listVideoPlayers(context: Context, video: VideoItem): List<ResolveInfo> {
+    val intent = Intent(Intent.ACTION_VIEW).apply {
+        setDataAndType(video.uri, video.mimeType)
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    }
+
+    return context.packageManager.queryIntentActivities(intent, 0)
+}
+
+fun getDefaultVideoPlayerPackage(context: Context): String? {
+    return context
+        .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        .getString(KEY_DEFAULT_PLAYER_PACKAGE, null)
+}
+
+fun saveDefaultVideoPlayerPackage(context: Context, packageName: String) {
+    context
+        .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        .edit()
+        .putString(KEY_DEFAULT_PLAYER_PACKAGE, packageName)
+        .apply()
+}
+
+fun openVideoWithPreferredPlayer(context: Context, video: VideoItem) {
+    val packageName = getDefaultVideoPlayerPackage(context)
+
+    if (packageName.isNullOrBlank()) {
+        openVideoExternally(context, video)
+        return
+    }
+
+    val intent = Intent(Intent.ACTION_VIEW).apply {
+        setDataAndType(video.uri, video.mimeType)
+        setPackage(packageName)
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    }
+
+    try {
+        context.startActivity(intent)
+    } catch (_: Exception) {
+        openVideoExternally(context, video)
     }
 }
 
