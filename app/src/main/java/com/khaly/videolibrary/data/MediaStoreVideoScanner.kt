@@ -65,7 +65,7 @@ class MediaStoreVideoScanner(
                         width = cursor.getInt(widthColumn),
                         height = cursor.getInt(heightColumn),
                         mimeType = cursor.getString(mimeColumn) ?: "video/*",
-                        filePath = cursor.getString(dataColumn)
+                        filePath = if (dataColumn >= 0) cursor.getString(dataColumn) else null
                     )
                 )
             }
