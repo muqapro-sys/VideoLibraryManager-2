@@ -13,8 +13,7 @@ data class VideoItem(
     val folderName: String,
     val width: Int,
     val height: Int,
-    val mimeType: String,
-    val filePath: String? = null
+    val mimeType: String
 )
 
 data class VideoFolder(
