@@ -2,6 +2,7 @@ package com.khaly.videolibrary
 
 import android.Manifest
 import android.content.Context
+import android.content.ClipData
 import android.content.Intent
 import android.graphics.Bitmap
 import android.content.pm.ResolveInfo
@@ -955,7 +956,7 @@ fun openVideoWithPreferredPlayer(context: Context, video: VideoItem) {
 }
 
 fun openVideoDirectly(context: Context, video: VideoItem) {
-    val shareUri = try {
+    val uriToOpen = try {
         val path = video.filePath
         if (!path.isNullOrBlank()) {
             val file = File(path)
@@ -976,19 +977,18 @@ fun openVideoDirectly(context: Context, video: VideoItem) {
     }
 
     val intent = Intent(Intent.ACTION_VIEW).apply {
-        setDataAndType(shareUri, video.mimeType)
+        setDataAndType(uriToOpen, video.mimeType)
 
         putExtra(Intent.EXTRA_TITLE, video.name)
         putExtra(Intent.EXTRA_SUBJECT, video.name)
         putExtra(Intent.EXTRA_TEXT, video.name)
         putExtra("title", video.name)
         putExtra("filename", video.name)
-        putExtra("android.intent.extra.TITLE", video.name)
 
-        clipData = android.content.ClipData.newUri(
+        clipData = ClipData.newUri(
             context.contentResolver,
             video.name,
-            shareUri
+            uriToOpen
         )
 
         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
@@ -1001,13 +1001,27 @@ fun openVideoDirectly(context: Context, video: VideoItem) {
     }
 }
 
+
 fun openVideoExternally(context: Context, video: VideoItem) {
     val intent = Intent(Intent.ACTION_VIEW).apply {
         setDataAndType(video.uri, video.mimeType)
+
+        putExtra(Intent.EXTRA_TITLE, video.name)
+        putExtra(Intent.EXTRA_SUBJECT, video.name)
+        putExtra(Intent.EXTRA_TEXT, video.name)
+
+        clipData = ClipData.newUri(
+            context.contentResolver,
+            video.name,
+            video.uri
+        )
+
         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
     }
-    context.startActivity(Intent.createChooser(intent, "Open video with"))
+
+    context.startActivity(Intent.createChooser(intent, video.name))
 }
+
 
 fun formatDuration(ms: Long): String {
     val hours = TimeUnit.MILLISECONDS.toHours(ms)
