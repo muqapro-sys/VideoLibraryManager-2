@@ -40,5 +40,7 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.9.0")
     implementation("io.coil-kt:coil-compose:2.7.0")
 
+    implementation("com.github.Dimezis:BlurView:version-2.0.6")
+
     debugImplementation("androidx.compose.ui:ui-tooling")
 }

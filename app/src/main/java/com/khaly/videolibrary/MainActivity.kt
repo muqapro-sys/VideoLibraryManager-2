@@ -13,6 +13,7 @@ import android.os.Bundle
 import android.util.Size
 import android.provider.Settings
 import android.widget.Toast
+import android.view.ViewGroup
 import android.provider.MediaStore
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -85,12 +86,15 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.core.content.PermissionChecker
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -105,6 +109,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
+import eightbitlab.com.blurview.BlurView
+import eightbitlab.com.blurview.RenderEffectBlur
 
 private const val PREFS_NAME = "video_library_prefs"
 private const val KEY_DEFAULT_PLAYER_PACKAGE = "default_video_player_package"
@@ -210,6 +216,35 @@ fun VideoLibraryApp(viewModel: VideoLibraryViewModel) {
             )
         }
     }
+}
+
+
+@Composable
+fun RealBlurBackground(
+    modifier: Modifier = Modifier,
+    blurRadius: Float = 22f
+) {
+    val composeView = LocalView.current
+    val overlayColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.20f).toArgb()
+
+    AndroidView(
+        modifier = modifier,
+        factory = { context ->
+            BlurView(context).apply {
+                val rootView = composeView.rootView as ViewGroup
+
+                setupWith(rootView, RenderEffectBlur())
+                    .setFrameClearDrawable(rootView.background)
+                    .setBlurRadius(blurRadius)
+
+                setOverlayColor(overlayColor)
+            }
+        },
+        update = { blurView ->
+            blurView.setOverlayColor(overlayColor)
+            blurView.setBlurRadius(blurRadius)
+        }
+    )
 }
 
 @Composable
