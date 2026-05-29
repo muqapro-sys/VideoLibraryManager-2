@@ -3,10 +3,12 @@ package com.khaly.videolibrary
 import android.Manifest
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
 import android.content.pm.ResolveInfo
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.util.Size
 import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -65,10 +67,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -85,6 +89,8 @@ import com.khaly.videolibrary.domain.VideoItem
 import com.khaly.videolibrary.domain.ViewMode
 import com.khaly.videolibrary.ui.theme.OneUi85Theme
 import java.text.DecimalFormat
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
 
 private const val PREFS_NAME = "video_library_prefs"
@@ -362,7 +368,7 @@ fun VideosScreen(
 
     if (viewMode == ViewMode.GRID) {
         LazyVerticalGrid(
-            columns = GridCells.Adaptive(156.dp),
+            columns = GridCells.Fixed(2),
             contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 10.dp, bottom = 18.dp),
             horizontalArrangement = Arrangement.spacedBy(14.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
@@ -394,6 +400,54 @@ fun VideosScreen(
 }
 
 @Composable
+fun VideoThumbnail(
+    video: VideoItem,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+
+    val bitmapState = produceState<Bitmap?>(initialValue = null, video.uri) {
+        value = withContext(Dispatchers.IO) {
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    context.contentResolver.loadThumbnail(
+                        video.uri,
+                        Size(512, 512),
+                        null
+                    )
+                } else {
+                    null
+                }
+            } catch (_: Exception) {
+                null
+            }
+        }
+    }
+
+    val bitmap = bitmapState.value
+
+    if (bitmap != null) {
+        Image(
+            bitmap = bitmap.asImageBitmap(),
+            contentDescription = video.name,
+            modifier = modifier,
+            contentScale = ContentScale.Crop
+        )
+    } else {
+        Box(
+            modifier = modifier.background(MaterialTheme.colorScheme.surfaceVariant),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "▶",
+                style = MaterialTheme.typography.displaySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
 fun VideoGridCard(
     video: VideoItem,
     favorite: Boolean,
@@ -410,14 +464,12 @@ fun VideoGridCard(
     ) {
         Column {
             Box {
-                Image(
-                    painter = rememberAsyncImagePainter(video.uri),
-                    contentDescription = video.name,
+                VideoThumbnail(
+                    video = video,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(128.dp)
-                        .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)),
-                    contentScale = ContentScale.Crop
+                        .height(150.dp)
+                        .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
                 )
                 Surface(
                     modifier = Modifier
@@ -484,13 +536,11 @@ fun VideoListCard(
             modifier = Modifier.padding(10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Image(
-                painter = rememberAsyncImagePainter(video.uri),
-                contentDescription = video.name,
+            VideoThumbnail(
+                video = video,
                 modifier = Modifier
                     .size(width = 112.dp, height = 74.dp)
-                    .clip(RoundedCornerShape(20.dp)),
-                contentScale = ContentScale.Crop
+                    .clip(RoundedCornerShape(20.dp))
             )
             Spacer(Modifier.width(13.dp))
             Column(Modifier.weight(1f)) {
