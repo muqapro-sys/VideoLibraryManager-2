@@ -13,7 +13,6 @@ import android.os.Bundle
 import android.util.Size
 import android.provider.Settings
 import android.widget.Toast
-import android.view.ViewGroup
 import android.provider.MediaStore
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -86,15 +85,12 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.core.content.PermissionChecker
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -109,8 +105,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
-import eightbitlab.com.blurview.BlurView
-import eightbitlab.com.blurview.RenderEffectBlur
 
 private const val PREFS_NAME = "video_library_prefs"
 private const val KEY_DEFAULT_PLAYER_PACKAGE = "default_video_player_package"
@@ -158,94 +152,70 @@ fun VideoLibraryApp(viewModel: VideoLibraryViewModel) {
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
-        Column(Modifier.fillMaxSize()) {
-            OneUiLargeHeader(
-                state = state,
-                onQueryChanged = viewModel::setQuery,
-                onToggleView = {
-                    viewModel.setViewMode(
-                        if (state.viewMode == ViewMode.GRID) ViewMode.LIST else ViewMode.GRID
-                    )
-                },
-                onSortChanged = viewModel::setSortMode,
-                onRefresh = viewModel::scanVideos
-            )
-
-            if (state.selectedFolder != null) {
-                AssistChip(
-                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 4.dp),
-                    onClick = viewModel::clearFolder,
-                    label = { Text("Folder: ${state.selectedFolder}  ×") }
+        Box(Modifier.fillMaxSize()) {
+            Column(Modifier.fillMaxSize()) {
+                OneUiLargeHeader(
+                    state = state,
+                    onQueryChanged = viewModel::setQuery,
+                    onToggleView = {
+                        viewModel.setViewMode(
+                            if (state.viewMode == ViewMode.GRID) ViewMode.LIST else ViewMode.GRID
+                        )
+                    },
+                    onSortChanged = viewModel::setSortMode,
+                    onRefresh = viewModel::scanVideos
                 )
-            }
 
-            Box(Modifier.weight(1f)) {
-                when {
-                    state.isLoading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
+                if (state.selectedFolder != null) {
+                    AssistChip(
+                        modifier = Modifier.padding(horizontal = 18.dp, vertical = 4.dp),
+                        onClick = viewModel::clearFolder,
+                        label = { Text("Folder: ${state.selectedFolder}  ×") }
+                    )
+                }
+
+                Box(Modifier.weight(1f)) {
+                    when {
+                        state.isLoading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator()
+                        }
+
+                        state.permissionDenied -> PermissionDeniedView(context)
+
+                        state.selectedTab == 1 -> FoldersScreen(
+                            folders = state.folders,
+                            onOpenFolder = { viewModel.openFolder(it.name) }
+                        )
+
+                        else -> VideosScreen(
+                            videos = state.filteredVideos,
+                            favorites = state.favorites,
+                            viewMode = state.viewMode,
+                            onOpen = { openVideoDirectly(context, it) },
+                            onFavorite = { viewModel.toggleFavorite(it.id) }
+                        )
                     }
-
-                    state.permissionDenied -> PermissionDeniedView(context)
-
-                    state.selectedTab == 0 -> VideosScreen(
-                        videos = state.filteredVideos,
-                        favorites = state.favorites,
-                        viewMode = state.viewMode,
-                        onOpen = { openVideoDirectly(context, it) },
-                        onFavorite = { viewModel.toggleFavorite(it.id) }
-                    )
-
-                    state.selectedTab == 1 -> FoldersScreen(
-                        folders = state.folders,
-                        onOpenFolder = { viewModel.openFolder(it.name) }
-                    )
-
-                    state.selectedTab == 2 -> VideosScreen(
-                        videos = state.videos.filter { it.id in state.favorites },
-                        favorites = state.favorites,
-                        viewMode = state.viewMode,
-                        onOpen = { openVideoDirectly(context, it) },
-                        onFavorite = { viewModel.toggleFavorite(it.id) }
-                    )
                 }
             }
 
-            OneUiBottomNav(
-                selected = state.selectedTab,
-                onSelect = viewModel::setTab
-            )
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+            ) {
+                OneUiBottomNav(
+                    selected = if (state.selectedTab == 1) 1 else 0,
+                    onSelect = viewModel::setTab
+                )
+            }
         }
     }
 }
 
 
-@Composable
-fun RealBlurBackground(
-    modifier: Modifier = Modifier,
-    blurRadius: Float = 22f
-) {
-    val composeView = LocalView.current
-    val overlayColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.20f).toArgb()
 
-    AndroidView(
-        modifier = modifier,
-        factory = { context ->
-            BlurView(context).apply {
-                val rootView = composeView.rootView as ViewGroup
 
-                setupWith(rootView, RenderEffectBlur())
-                    .setFrameClearDrawable(rootView.background)
-                    .setBlurRadius(blurRadius)
 
-                setOverlayColor(overlayColor)
-            }
-        },
-        update = { blurView ->
-            blurView.setOverlayColor(overlayColor)
-            blurView.setBlurRadius(blurRadius)
-        }
-    )
-}
 
 @Composable
 fun GlassIconButton(
@@ -253,42 +223,33 @@ fun GlassIconButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Box(
-        modifier = modifier
-            .size(52.dp)
-            .clip(RoundedCornerShape(22.dp))
-    ) {
-        RealBlurBackground(
-            modifier = Modifier.matchParentSize(),
-            blurRadius = 24f
+    Surface(
+        onClick = onClick,
+        modifier = modifier.size(48.dp),
+        shape = RoundedCornerShape(20.dp),
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.20f),
+        tonalElevation = 0.dp,
+        shadowElevation = 0.dp,
+        border = BorderStroke(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.18f)
         )
-
-        Surface(
-            onClick = onClick,
-            modifier = Modifier.matchParentSize(),
-            shape = RoundedCornerShape(22.dp),
-            color = Color.Transparent,
-            tonalElevation = 0.dp,
-            shadowElevation = 0.dp,
-            border = BorderStroke(
-                width = 1.dp,
-                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.22f)
-            )
+    ) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier.fillMaxSize()
         ) {
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier.fillMaxSize()
-            ) {
-                Text(
-                    text = text,
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.94f)
-                )
-            }
+            Text(
+                text = text,
+                fontSize = 27.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.95f)
+            )
         }
     }
 }
+
+
 
 
 
@@ -306,7 +267,7 @@ fun OneUiLargeHeader(
         modifier = Modifier
             .fillMaxWidth()
             .statusBarsPadding()
-            .padding(start = 18.dp, end = 18.dp, top = 10.dp, bottom = 10.dp)
+            .padding(start = 18.dp, end = 18.dp, top = 8.dp, bottom = 8.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -314,29 +275,24 @@ fun OneUiLargeHeader(
         ) {
             Column(Modifier.weight(1f)) {
                 Text(
-                    text = when (state.selectedTab) {
-                        1 -> "Folders"
-                        2 -> "Favorites"
-                        else -> "Video"
-                    },
-                    fontSize = 34.sp,
+                    text = if (state.selectedTab == 1) "Folders" else "Video",
+                    fontSize = 32.sp,
                     fontWeight = FontWeight.Light,
                     color = MaterialTheme.colorScheme.onBackground
                 )
 
                 Text(
-                    text = when (state.selectedTab) {
-                        1 -> "${state.folders.size} Folders"
-                        2 -> "${state.favorites.size} Favorites"
-                        else -> "${state.videos.size} Videos"
-                    },
-                    fontSize = 15.sp,
+                    text = if (state.selectedTab == 1)
+                        "${state.folders.size} Folders"
+                    else
+                        "${state.videos.size} Videos",
+                    fontSize = 14.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
             Row(
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 GlassIconButton(
@@ -357,7 +313,7 @@ fun OneUiLargeHeader(
         }
 
         if (state.selectedTab == 0) {
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(10.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -380,7 +336,7 @@ fun OneUiLargeHeader(
         }
 
         if (state.query.isNotBlank()) {
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(8.dp))
 
             OutlinedTextField(
                 value = state.query,
@@ -393,6 +349,8 @@ fun OneUiLargeHeader(
         }
     }
 }
+
+
 
 
 
@@ -468,39 +426,28 @@ fun GlassSortButton(
     var expanded by remember { mutableStateOf(false) }
 
     Box {
-        Box(
-            modifier = Modifier
-                .height(52.dp)
-                .clip(RoundedCornerShape(22.dp))
-        ) {
-            RealBlurBackground(
-                modifier = Modifier.matchParentSize(),
-                blurRadius = 24f
+        Surface(
+            onClick = { expanded = true },
+            modifier = Modifier.height(48.dp),
+            shape = RoundedCornerShape(20.dp),
+            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.20f),
+            tonalElevation = 0.dp,
+            shadowElevation = 0.dp,
+            border = BorderStroke(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.18f)
             )
-
-            Surface(
-                onClick = { expanded = true },
-                modifier = Modifier.matchParentSize(),
-                shape = RoundedCornerShape(22.dp),
-                color = Color.Transparent,
-                tonalElevation = 0.dp,
-                shadowElevation = 0.dp,
-                border = BorderStroke(
-                    width = 1.dp,
-                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.22f)
-                )
+        ) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier.padding(horizontal = 16.dp)
             ) {
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier.padding(horizontal = 18.dp)
-                ) {
-                    Text(
-                        "Sort",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.94f)
-                    )
-                }
+                Text(
+                    "Sort",
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.95f)
+                )
             }
         }
 
@@ -532,62 +479,35 @@ fun GlassSortButton(
 
 
 
+
+
 @Composable
 fun OneUiBottomNav(selected: Int, onSelect: (Int) -> Unit) {
-    Box(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
             .navigationBarsPadding()
-            .padding(start = 22.dp, end = 22.dp, bottom = 10.dp),
-        contentAlignment = Alignment.Center
+            .padding(start = 28.dp, end = 28.dp, bottom = 12.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(82.dp)
-                .clip(RoundedCornerShape(34.dp))
-        ) {
-            RealBlurBackground(
-                modifier = Modifier.matchParentSize(),
-                blurRadius = 28f
-            )
+        GlassBottomTab(
+            selected = selected == 0,
+            icon = "▦",
+            label = "Videos",
+            onClick = { onSelect(0) }
+        )
 
-            Surface(
-                modifier = Modifier.matchParentSize(),
-                shape = RoundedCornerShape(34.dp),
-                color = Color.Transparent,
-                tonalElevation = 0.dp,
-                shadowElevation = 0.dp,
-                border = BorderStroke(
-                    width = 1.dp,
-                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.20f)
-                )
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 12.dp, vertical = 10.dp),
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    GlassBottomTab(
-                        selected = selected == 0,
-                        icon = "▦",
-                        label = "Videos",
-                        onClick = { onSelect(0) }
-                    )
-
-                    GlassBottomTab(
-                        selected = selected == 1,
-                        icon = "▣",
-                        label = "Folders",
-                        onClick = { onSelect(1) }
-                    )
-                }
-            }
-        }
+        GlassBottomTab(
+            selected = selected == 1,
+            icon = "▣",
+            label = "Folders",
+            onClick = { onSelect(1) }
+        )
     }
 }
+
+
 
 
 
@@ -608,58 +528,52 @@ fun GlassBottomTab(
     label: String,
     onClick: () -> Unit
 ) {
-    Box(
+    Surface(
+        onClick = onClick,
         modifier = Modifier
-            .width(132.dp)
-            .height(62.dp)
-            .clip(RoundedCornerShape(28.dp))
+            .width(128.dp)
+            .height(64.dp),
+        shape = RoundedCornerShape(28.dp),
+        color = if (selected)
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.20f)
+        else
+            MaterialTheme.colorScheme.surface.copy(alpha = 0.14f),
+        tonalElevation = 0.dp,
+        shadowElevation = 0.dp,
+        border = BorderStroke(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.16f)
+        )
     ) {
-        if (selected) {
-            RealBlurBackground(
-                modifier = Modifier.matchParentSize(),
-                blurRadius = 18f
-            )
-        }
-
-        Surface(
-            onClick = onClick,
-            modifier = Modifier.matchParentSize(),
-            shape = RoundedCornerShape(28.dp),
-            color = if (selected)
-                MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
-            else
-                Color.Transparent,
-            tonalElevation = 0.dp,
-            shadowElevation = 0.dp
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = icon,
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = if (selected)
-                        MaterialTheme.colorScheme.primary
-                    else
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                )
+            Text(
+                text = icon,
+                fontSize = 27.sp,
+                fontWeight = FontWeight.Bold,
+                color = if (selected)
+                    MaterialTheme.colorScheme.primary
+                else
+                    MaterialTheme.colorScheme.onSurfaceVariant
+            )
 
-                Text(
-                    text = label,
-                    fontSize = 14.sp,
-                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
-                    color = if (selected)
-                        MaterialTheme.colorScheme.primary
-                    else
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+            Text(
+                text = label,
+                fontSize = 14.sp,
+                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                color = if (selected)
+                    MaterialTheme.colorScheme.primary
+                else
+                    MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
+
+
 
 
 
@@ -674,58 +588,41 @@ fun SelectionActionBar(
     onRename: () -> Unit,
     onCancel: () -> Unit
 ) {
-    Box(
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 8.dp)
-            .clip(RoundedCornerShape(26.dp))
-    ) {
-        RealBlurBackground(
-            modifier = Modifier.matchParentSize(),
-            blurRadius = 24f
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        shape = RoundedCornerShape(24.dp),
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.18f),
+        border = BorderStroke(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.18f)
         )
-
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(26.dp),
-            color = Color.Transparent,
-            border = BorderStroke(
-                width = 1.dp,
-                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.20f)
-            )
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    "$count selected",
-                    modifier = Modifier.weight(1f),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
-                )
+            Text(
+                "$count selected",
+                modifier = Modifier.weight(1f),
+                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp
+            )
 
-                TextButton(onClick = onShare) {
-                    Text("Share")
-                }
+            TextButton(onClick = onShare) { Text("Share") }
 
-                if (canRename) {
-                    TextButton(onClick = onRename) {
-                        Text("Rename")
-                    }
-                }
-
-                TextButton(onClick = onDelete) {
-                    Text("Delete")
-                }
-
-                TextButton(onClick = onCancel) {
-                    Text("Cancel")
-                }
+            if (canRename) {
+                TextButton(onClick = onRename) { Text("Rename") }
             }
+
+            TextButton(onClick = onDelete) { Text("Delete") }
+            TextButton(onClick = onCancel) { Text("Cancel") }
         }
     }
 }
+
+
 
 
 @Composable
@@ -770,7 +667,7 @@ fun VideosScreen(
         if (viewMode == ViewMode.GRID) {
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
-                contentPadding = PaddingValues(start = 12.dp, end = 12.dp, top = 0.dp, bottom = 110.dp),
+                contentPadding = PaddingValues(start = 12.dp, end = 12.dp, top = 0.dp, bottom = 24.dp),
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 verticalArrangement = Arrangement.spacedBy(18.dp)
             ) {
@@ -794,7 +691,7 @@ fun VideosScreen(
             }
         } else {
             LazyColumn(
-                contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 0.dp, bottom = 110.dp),
+                contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 0.dp, bottom = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 items(videos, key = { it.id }) { video ->
@@ -832,6 +729,8 @@ fun VideosScreen(
         )
     }
 }
+
+
 
 
 
@@ -891,180 +790,6 @@ fun VideoThumbnail(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-fun VideoGridCard(
-    video: VideoItem,
-    favorite: Boolean,
-    selected: Boolean,
-    selectionMode: Boolean,
-    onOpen: () -> Unit,
-    onToggleSelected: () -> Unit,
-    onFavorite: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .combinedClickable(
-                onClick = {
-                    if (selectionMode) onToggleSelected() else onOpen()
-                },
-                onLongClick = {
-                    onToggleSelected()
-                }
-            )
-    ) {
-        Box {
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(3.dp),
-                border = if (selected) BorderStroke(3.dp, MaterialTheme.colorScheme.primary) else null,
-                color = Color.Transparent
-            ) {
-                Box {
-                    VideoThumbnail(
-                        video = video,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(126.dp)
-                            .clip(RoundedCornerShape(2.dp))
-                    )
-
-                    if (selected) {
-                        Surface(
-                            modifier = Modifier
-                                .align(Alignment.TopStart)
-                                .padding(6.dp),
-                            shape = RoundedCornerShape(100.dp),
-                            color = MaterialTheme.colorScheme.primary
-                        ) {
-                            Text(
-                                "✓",
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-                                color = MaterialTheme.colorScheme.onPrimary,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
-
-                    Surface(
-                        modifier = Modifier
-                            .align(Alignment.BottomEnd)
-                            .padding(5.dp),
-                        color = Color.Black.copy(alpha = 0.62f),
-                        shape = RoundedCornerShape(2.dp)
-                    ) {
-                        Text(
-                            text = formatDuration(video.durationMs),
-                            color = Color.White,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                            fontSize = 14.sp
-                        )
-                    }
-                }
-            }
-        }
-
-        Spacer(Modifier.height(7.dp))
-
-        Text(
-            text = video.name,
-            modifier = Modifier.fillMaxWidth(),
-            textAlign = TextAlign.Center,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            fontSize = 15.sp,
-            color = MaterialTheme.colorScheme.onBackground
-        )
-
-        Spacer(Modifier.height(3.dp))
-
-        Text(
-            text = "${formatDuration(video.durationMs)} • ${formatSize(video.sizeBytes)} • ${video.width}×${video.height}",
-            modifier = Modifier.fillMaxWidth(),
-            textAlign = TextAlign.Center,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            fontSize = 12.sp,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
-}
-
-
-
-
-
-
-
-
-
-
-
-@Composable
-fun VideoListCard(
-    video: VideoItem,
-    favorite: Boolean,
-    onOpen: () -> Unit,
-    onFavorite: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onOpen() }
-            .padding(vertical = 6.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        VideoThumbnail(
-            video = video,
-            modifier = Modifier
-                .size(width = 126.dp, height = 78.dp)
-                .clip(RoundedCornerShape(4.dp))
-        )
-
-        Spacer(Modifier.width(12.dp))
-
-        Column(Modifier.weight(1f)) {
-            Text(
-                video.name,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                fontSize = 17.sp
-            )
-
-            Spacer(Modifier.height(4.dp))
-
-            Text(
-                "${formatDuration(video.durationMs)} • ${formatSize(video.sizeBytes)} • ${video.width}×${video.height}",
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                fontSize = 13.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            Text(
-                video.folderName,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                fontSize = 13.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-
-        Text(
-            text = "⋮",
-            fontSize = 24.sp,
-            modifier = Modifier.padding(start = 8.dp)
-        )
-    }
-}
-
-
-
-
-
-
-
 @Composable
 fun FoldersScreen(
     folders: List<VideoFolder>,
@@ -1076,44 +801,59 @@ fun FoldersScreen(
     }
 
     LazyColumn(
-        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 10.dp, bottom = 18.dp),
+        contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 0.dp, bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         items(folders, key = { it.name }) { folder ->
-            ElevatedCard(
+            Surface(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable { onOpenFolder(folder) },
-                shape = RoundedCornerShape(28.dp),
-                colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface),
-                elevation = CardDefaults.elevatedCardElevation(defaultElevation = 1.dp)
+                shape = RoundedCornerShape(22.dp),
+                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.10f),
+                border = BorderStroke(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.12f)
+                )
             ) {
                 Row(
-                    modifier = Modifier.padding(18.dp),
+                    modifier = Modifier.padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Surface(
-                        shape = RoundedCornerShape(22.dp),
-                        color = MaterialTheme.colorScheme.primaryContainer
-                    ) {
+                    Text(
+                        "▣",
+                        fontSize = 30.sp,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+
+                    Spacer(Modifier.width(14.dp))
+
+                    Column(Modifier.weight(1f)) {
                         Text(
-                            "▣",
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 13.dp),
-                            style = MaterialTheme.typography.headlineSmall,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                            folder.name,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+
+                        Text(
+                            "${folder.count} videos • ${formatSize(folder.totalSizeBytes)}",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                    Spacer(Modifier.width(14.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text(folder.name, fontWeight = FontWeight.ExtraBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        Text("${folder.count} videos • ${formatSize(folder.totalSizeBytes)}", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                    Text("›", style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+
+                    Text(
+                        "›",
+                        fontSize = 28.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
         }
     }
 }
+
+
 
 @Composable
 fun EmptyView(message: String) {
@@ -1401,6 +1141,8 @@ fun RenameVideoDialog(
 }
 
 
+
+
 fun shareVideos(context: Context, videos: List<VideoItem>) {
     if (videos.isEmpty()) return
 
@@ -1415,6 +1157,8 @@ fun shareVideos(context: Context, videos: List<VideoItem>) {
 
     context.startActivity(Intent.createChooser(intent, "Share videos"))
 }
+
+
 
 fun requestDeleteVideos(
     context: Context,
@@ -1439,6 +1183,8 @@ fun requestDeleteVideos(
         Toast.makeText(context, "Deleted", Toast.LENGTH_SHORT).show()
     }
 }
+
+
 
 fun renameVideo(
     context: Context,
@@ -1471,6 +1217,8 @@ fun renameVideo(
         false
     }
 }
+
+
 
 
 fun openVideoDirectly(context: Context, video: VideoItem) {
