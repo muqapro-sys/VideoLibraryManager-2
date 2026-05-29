@@ -666,6 +666,69 @@ fun GlassBottomTab(
 
 
 @Composable
+fun SelectionActionBar(
+    count: Int,
+    canRename: Boolean,
+    onShare: () -> Unit,
+    onDelete: () -> Unit,
+    onRename: () -> Unit,
+    onCancel: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 8.dp)
+            .clip(RoundedCornerShape(26.dp))
+    ) {
+        RealBlurBackground(
+            modifier = Modifier.matchParentSize(),
+            blurRadius = 24f
+        )
+
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(26.dp),
+            color = Color.Transparent,
+            border = BorderStroke(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.20f)
+            )
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    "$count selected",
+                    modifier = Modifier.weight(1f),
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp
+                )
+
+                TextButton(onClick = onShare) {
+                    Text("Share")
+                }
+
+                if (canRename) {
+                    TextButton(onClick = onRename) {
+                        Text("Rename")
+                    }
+                }
+
+                TextButton(onClick = onDelete) {
+                    Text("Delete")
+                }
+
+                TextButton(onClick = onCancel) {
+                    Text("Cancel")
+                }
+            }
+        }
+    }
+}
+
+
+@Composable
 fun VideosScreen(
     videos: List<VideoItem>,
     favorites: Set<Long>,
