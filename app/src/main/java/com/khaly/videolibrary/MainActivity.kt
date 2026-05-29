@@ -17,6 +17,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -204,6 +205,38 @@ fun VideoLibraryApp(viewModel: VideoLibraryViewModel) {
 }
 
 @Composable
+fun GlassIconButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        onClick = onClick,
+        modifier = modifier.size(52.dp),
+        shape = RoundedCornerShape(22.dp),
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.42f),
+        tonalElevation = 6.dp,
+        shadowElevation = 8.dp,
+        border = BorderStroke(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.28f)
+        )
+    ) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier.fillMaxSize()
+        ) {
+            Text(
+                text = text,
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.92f)
+            )
+        }
+    }
+}
+
+@Composable
 fun OneUiLargeHeader(
     state: VideoLibraryUiState,
     onQueryChanged: (String) -> Unit,
@@ -215,64 +248,59 @@ fun OneUiLargeHeader(
         modifier = Modifier
             .fillMaxWidth()
             .statusBarsPadding()
-            .padding(start = 12.dp, end = 12.dp, top = 20.dp, bottom = 18.dp)
+            .padding(start = 18.dp, end = 18.dp, top = 10.dp, bottom = 10.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.End,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = if (state.viewMode == ViewMode.GRID) "☷" else "▦",
-                fontSize = 30.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier
-                    .padding(horizontal = 12.dp)
-                    .clickable { onToggleView() }
-            )
+            Column(Modifier.weight(1f)) {
+                Text(
+                    text = when (state.selectedTab) {
+                        1 -> "Folders"
+                        2 -> "Favorites"
+                        else -> "Video"
+                    },
+                    fontSize = 34.sp,
+                    fontWeight = FontWeight.Light,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
 
-            Text(
-                text = "⌕",
-                fontSize = 34.sp,
-                fontWeight = FontWeight.Normal,
-                modifier = Modifier.padding(horizontal = 12.dp)
-            )
+                Text(
+                    text = when (state.selectedTab) {
+                        1 -> "${state.folders.size} Folders"
+                        2 -> "${state.favorites.size} Favorites"
+                        else -> "${state.videos.size} Videos"
+                    },
+                    fontSize = 15.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
 
-            SortPill(sortMode = state.sortMode, onSortChanged = onSortChanged)
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                GlassIconButton(
+                    text = if (state.viewMode == ViewMode.GRID) "☷" else "▦",
+                    onClick = onToggleView
+                )
+
+                GlassIconButton(
+                    text = "⌕",
+                    onClick = { }
+                )
+
+                GlassSortButton(
+                    sortMode = state.sortMode,
+                    onSortChanged = onSortChanged
+                )
+            }
         }
 
-        Spacer(Modifier.height(58.dp))
-
-        Text(
-            text = when (state.selectedTab) {
-                1 -> "Folders"
-                2 -> "Favorites"
-                else -> "Video"
-            },
-            modifier = Modifier.fillMaxWidth(),
-            textAlign = TextAlign.Center,
-            fontSize = 56.sp,
-            fontWeight = FontWeight.Light,
-            color = MaterialTheme.colorScheme.onBackground
-        )
-
-        Spacer(Modifier.height(6.dp))
-
-        Text(
-            text = when (state.selectedTab) {
-                1 -> "${state.folders.size} Folders"
-                2 -> "${state.favorites.size} Favorites"
-                else -> "${state.videos.size} Videos"
-            },
-            modifier = Modifier.fillMaxWidth(),
-            textAlign = TextAlign.Center,
-            fontSize = 18.sp,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-
-        Spacer(Modifier.height(26.dp))
-
         if (state.selectedTab == 0) {
+            Spacer(Modifier.height(12.dp))
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -294,7 +322,7 @@ fun OneUiLargeHeader(
         }
 
         if (state.query.isNotBlank()) {
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(10.dp))
 
             OutlinedTextField(
                 value = state.query,
@@ -307,6 +335,8 @@ fun OneUiLargeHeader(
         }
     }
 }
+
+
 
 
 
@@ -369,43 +399,103 @@ fun QuickStatChip(label: String, value: String) {
 }
 
 @Composable
-fun OneUiBottomNav(selected: Int, onSelect: (Int) -> Unit) {
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .navigationBarsPadding(),
-        color = MaterialTheme.colorScheme.background,
-        tonalElevation = 0.dp,
-        shadowElevation = 0.dp
-    ) {
-        NavigationBar(
-            modifier = Modifier.height(76.dp),
-            containerColor = MaterialTheme.colorScheme.background,
-            tonalElevation = 0.dp
-        ) {
-            val items = listOf(
-                Triple("▦", "Videos", 0),
-                Triple("▣", "Folders", 1)
-            )
+fun GlassSortButton(
+    sortMode: SortMode,
+    onSortChanged: (SortMode) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
 
-            items.forEach { item ->
-                NavigationBarItem(
-                    selected = selected == item.third,
-                    onClick = { onSelect(item.third) },
-                    icon = {
+    Box {
+        Surface(
+            onClick = { expanded = true },
+            modifier = Modifier.height(52.dp),
+            shape = RoundedCornerShape(22.dp),
+            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.42f),
+            tonalElevation = 6.dp,
+            shadowElevation = 8.dp,
+            border = BorderStroke(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.28f)
+            )
+        ) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier.padding(horizontal = 18.dp)
+            ) {
+                Text(
+                    "Sort",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.92f)
+                )
+            }
+        }
+
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            SortMode.entries.forEach { mode ->
+                DropdownMenuItem(
+                    text = {
                         Text(
-                            item.first,
-                            fontSize = 28.sp,
-                            fontWeight = FontWeight.Bold
+                            mode.name
+                                .replace("_", " ")
+                                .lowercase()
+                                .replaceFirstChar { it.uppercase() }
                         )
                     },
-                    label = {
-                        Text(
-                            item.second,
-                            fontSize = 16.sp,
-                            fontWeight = if (selected == item.third) FontWeight.Bold else FontWeight.Normal
-                        )
+                    onClick = {
+                        expanded = false
+                        onSortChanged(mode)
                     }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun OneUiBottomNav(selected: Int, onSelect: (Int) -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .navigationBarsPadding()
+            .padding(start = 22.dp, end = 22.dp, bottom = 10.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(82.dp),
+            shape = RoundedCornerShape(34.dp),
+            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.42f),
+            tonalElevation = 8.dp,
+            shadowElevation = 12.dp,
+            border = BorderStroke(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)
+            )
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                GlassBottomTab(
+                    selected = selected == 0,
+                    icon = "▦",
+                    label = "Videos",
+                    onClick = { onSelect(0) }
+                )
+
+                GlassBottomTab(
+                    selected = selected == 1,
+                    icon = "▣",
+                    label = "Folders",
+                    onClick = { onSelect(1) }
                 )
             }
         }
@@ -417,6 +507,56 @@ fun OneUiBottomNav(selected: Int, onSelect: (Int) -> Unit) {
 
 
 
+
+
+
+@Composable
+fun GlassBottomTab(
+    selected: Boolean,
+    icon: String,
+    label: String,
+    onClick: () -> Unit
+) {
+    Surface(
+        onClick = onClick,
+        modifier = Modifier
+            .width(132.dp)
+            .height(62.dp),
+        shape = RoundedCornerShape(28.dp),
+        color = if (selected)
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.24f)
+        else
+            Color.Transparent,
+        tonalElevation = if (selected) 6.dp else 0.dp,
+        shadowElevation = if (selected) 4.dp else 0.dp
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = icon,
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Bold,
+                color = if (selected)
+                    MaterialTheme.colorScheme.primary
+                else
+                    MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Text(
+                text = label,
+                fontSize = 14.sp,
+                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                color = if (selected)
+                    MaterialTheme.colorScheme.primary
+                else
+                    MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
 
 @Composable
 fun VideosScreen(
