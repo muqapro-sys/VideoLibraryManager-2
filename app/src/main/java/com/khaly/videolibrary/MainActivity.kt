@@ -311,6 +311,8 @@ fun OneUiLargeHeader(
 
 
 
+
+
 @Composable
 fun OneUiPillButton(text: String, onClick: () -> Unit) {
     Surface(
@@ -413,6 +415,8 @@ fun OneUiBottomNav(selected: Int, onSelect: (Int) -> Unit) {
 
 
 
+
+
 @Composable
 fun VideosScreen(
     videos: List<VideoItem>,
@@ -458,6 +462,8 @@ fun VideosScreen(
         }
     }
 }
+
+
 
 
 
@@ -578,6 +584,8 @@ fun VideoGridCard(
 
 
 
+
+
 @Composable
 fun VideoListCard(
     video: VideoItem,
@@ -635,6 +643,8 @@ fun VideoListCard(
         )
     }
 }
+
+
 
 
 
