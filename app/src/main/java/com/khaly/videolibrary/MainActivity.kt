@@ -214,7 +214,7 @@ fun OneUiLargeHeader(
         modifier = Modifier
             .fillMaxWidth()
             .statusBarsPadding()
-            .padding(start = 12.dp, end = 12.dp, top = 18.dp, bottom = 22.dp)
+            .padding(start = 12.dp, end = 12.dp, top = 20.dp, bottom = 18.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -233,16 +233,14 @@ fun OneUiLargeHeader(
             Text(
                 text = "⌕",
                 fontSize = 34.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier
-                    .padding(horizontal = 12.dp)
-                    .clickable { }
+                fontWeight = FontWeight.Normal,
+                modifier = Modifier.padding(horizontal = 12.dp)
             )
 
             SortPill(sortMode = state.sortMode, onSortChanged = onSortChanged)
         }
 
-        Spacer(Modifier.height(64.dp))
+        Spacer(Modifier.height(58.dp))
 
         Text(
             text = when (state.selectedTab) {
@@ -268,19 +266,39 @@ fun OneUiLargeHeader(
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Center,
             fontSize = 18.sp,
-            fontWeight = FontWeight.Normal,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
-        Spacer(Modifier.height(30.dp))
+        Spacer(Modifier.height(26.dp))
+
+        if (state.selectedTab == 0) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                FilterChip(
+                    selected = false,
+                    onClick = { },
+                    label = { Text("Large files") },
+                    leadingIcon = { Text("◇") }
+                )
+
+                FilterChip(
+                    selected = false,
+                    onClick = { },
+                    label = { Text("This week") },
+                    leadingIcon = { Text("◷") }
+                )
+            }
+        }
 
         if (state.query.isNotBlank()) {
+            Spacer(Modifier.height(12.dp))
+
             OutlinedTextField(
                 value = state.query,
                 onValueChange = onQueryChanged,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp),
+                modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 shape = RoundedCornerShape(22.dp),
                 label = { Text("Search videos") }
@@ -288,6 +306,8 @@ fun OneUiLargeHeader(
         }
     }
 }
+
+
 
 
 
@@ -362,8 +382,7 @@ fun OneUiBottomNav(selected: Int, onSelect: (Int) -> Unit) {
         ) {
             val items = listOf(
                 Triple("▦", "Videos", 0),
-                Triple("▣", "Folders", 1),
-                Triple("★", "Favorites", 2)
+                Triple("▣", "Folders", 1)
             )
 
             items.forEach { item ->
@@ -380,7 +399,7 @@ fun OneUiBottomNav(selected: Int, onSelect: (Int) -> Unit) {
                     label = {
                         Text(
                             item.second,
-                            fontSize = 15.sp,
+                            fontSize = 16.sp,
                             fontWeight = if (selected == item.third) FontWeight.Bold else FontWeight.Normal
                         )
                     }
@@ -389,6 +408,8 @@ fun OneUiBottomNav(selected: Int, onSelect: (Int) -> Unit) {
         }
     }
 }
+
+
 
 
 
@@ -437,6 +458,8 @@ fun VideosScreen(
         }
     }
 }
+
+
 
 
 
@@ -520,8 +543,7 @@ fun VideoGridCard(
                     text = formatDuration(video.durationMs),
                     color = Color.White,
                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Normal
+                    fontSize = 14.sp
                 )
             }
         }
@@ -535,7 +557,6 @@ fun VideoGridCard(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             fontSize = 15.sp,
-            fontWeight = FontWeight.Normal,
             color = MaterialTheme.colorScheme.onBackground
         )
 
@@ -552,6 +573,8 @@ fun VideoGridCard(
         )
     }
 }
+
+
 
 
 
@@ -583,8 +606,7 @@ fun VideoListCard(
                 video.name,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                fontSize = 17.sp,
-                fontWeight = FontWeight.Normal
+                fontSize = 17.sp
             )
 
             Spacer(Modifier.height(4.dp))
@@ -613,6 +635,8 @@ fun VideoListCard(
         )
     }
 }
+
+
 
 
 
