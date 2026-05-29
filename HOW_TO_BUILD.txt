@@ -1,0 +1,9 @@
+افتح المشروع من Android Studio مباشرة.
+
+إذا ظهر طلب Gradle Sync:
+- وافق على تنزيل Gradle المطلوب.
+- استخدم JDK 17.
+- شغل التطبيق على هاتف Android 13 إلى Android 16.
+
+لإخراج APK:
+Android Studio > Build > Build App Bundle(s) / APK(s) > Build APK(s)
