@@ -955,13 +955,26 @@ fun openVideoWithPreferredPlayer(context: Context, video: VideoItem) {
 fun openVideoDirectly(context: Context, video: VideoItem) {
     val intent = Intent(Intent.ACTION_VIEW).apply {
         setDataAndType(video.uri, video.mimeType)
+
+        putExtra(Intent.EXTRA_TITLE, video.name)
+        putExtra(Intent.EXTRA_SUBJECT, video.name)
+        putExtra(Intent.EXTRA_TEXT, video.name)
+
+        clipData = android.content.ClipData.newUri(
+            context.contentResolver,
+            video.name,
+            video.uri
+        )
+
         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
     }
 
     try {
         context.startActivity(intent)
     } catch (_: Exception) {
-        context.startActivity(Intent.createChooser(intent, "Open video with"))
+        context.startActivity(
+            Intent.createChooser(intent, video.name)
+        )
     }
 }
 
