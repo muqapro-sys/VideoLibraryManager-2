@@ -2,6 +2,8 @@ package com.khaly.videolibrary
 
 import android.Manifest
 import android.content.Context
+import android.graphics.Color as AndroidColor
+import android.content.res.Configuration
 import android.content.ContentValues
 import android.content.ClipData
 import android.content.Intent
@@ -12,6 +14,8 @@ import android.os.Build
 import android.os.Bundle
 import android.util.Size
 import android.provider.Settings
+import android.view.WindowInsetsController
+import android.view.View
 import android.widget.Toast
 import android.provider.MediaStore
 import androidx.activity.ComponentActivity
@@ -114,6 +118,33 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        window.statusBarColor = AndroidColor.TRANSPARENT
+        window.navigationBarColor = AndroidColor.TRANSPARENT
+
+        val isDarkMode = (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val flags = if (isDarkMode) {
+                0
+            } else {
+                WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS or
+                    WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS
+            }
+
+            window.insetsController?.setSystemBarsAppearance(
+                flags,
+                WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS or
+                    WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS
+            )
+        } else {
+            @Suppress("DEPRECATION")
+            window.decorView.systemUiVisibility = if (isDarkMode) {
+                0
+            } else {
+                View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
+            }
+        }
         setContent {
             OneUi85Theme {
                 VideoLibraryApp(viewModel = viewModel)
@@ -579,48 +610,74 @@ fun GlassBottomTab(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 @Composable
-fun SelectionActionBar(
-    count: Int,
-    canRename: Boolean,
-    onShare: () -> Unit,
-    onDelete: () -> Unit,
-    onRename: () -> Unit,
-    onCancel: () -> Unit
+fun VideoThumbnail(
+    video: VideoItem,
+    modifier: Modifier = Modifier
 ) {
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 8.dp),
-        shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.18f),
-        border = BorderStroke(
-            width = 1.dp,
-            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.18f)
+    val context = LocalContext.current
+
+    val bitmapState = produceState<Bitmap?>(initialValue = null, video.uri) {
+        value = withContext(Dispatchers.IO) {
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    context.contentResolver.loadThumbnail(
+                        video.uri,
+                        Size(512, 512),
+                        null
+                    )
+                } else {
+                    null
+                }
+            } catch (_: Exception) {
+                null
+            }
+        }
+    }
+
+    val bitmap = bitmapState.value
+
+    if (bitmap != null) {
+        Image(
+            bitmap = bitmap.asImageBitmap(),
+            contentDescription = video.name,
+            modifier = modifier,
+            contentScale = ContentScale.Crop
         )
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically
+    } else {
+        Box(
+            modifier = modifier.background(MaterialTheme.colorScheme.surfaceVariant),
+            contentAlignment = Alignment.Center
         ) {
             Text(
-                "$count selected",
-                modifier = Modifier.weight(1f),
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp
+                text = "▶",
+                style = MaterialTheme.typography.displaySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-
-            TextButton(onClick = onShare) { Text("Share") }
-
-            if (canRename) {
-                TextButton(onClick = onRename) { Text("Rename") }
-            }
-
-            TextButton(onClick = onDelete) { Text("Delete") }
-            TextButton(onClick = onCancel) { Text("Cancel") }
         }
     }
 }
+
+
 
 
 
@@ -698,11 +755,14 @@ fun VideosScreen(
                     VideoListCard(
                         video = video,
                         favorite = video.id in favorites,
-                        onOpen = {
-                            if (selectedIds.isNotEmpty()) {
-                                selectedIds = if (video.id in selectedIds) selectedIds - video.id else selectedIds + video.id
+                        selected = video.id in selectedIds,
+                        selectionMode = selectedIds.isNotEmpty(),
+                        onOpen = { onOpen(video) },
+                        onToggleSelected = {
+                            selectedIds = if (video.id in selectedIds) {
+                                selectedIds - video.id
                             } else {
-                                onOpen(video)
+                                selectedIds + video.id
                             }
                         },
                         onFavorite = { onFavorite(video) }
@@ -718,11 +778,13 @@ fun VideosScreen(
             onDismiss = { renameVideo = null },
             onRename = { newName ->
                 val ok = renameVideo(context, video, newName)
+
                 Toast.makeText(
                     context,
                     if (ok) "Renamed" else "Rename failed",
                     Toast.LENGTH_SHORT
                 ).show()
+
                 renameVideo = null
                 selectedIds = emptySet()
             }
@@ -731,550 +793,62 @@ fun VideosScreen(
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
 @Composable
-fun VideoThumbnail(
-    video: VideoItem,
-    modifier: Modifier = Modifier
+fun SelectionActionBar(
+    count: Int,
+    canRename: Boolean,
+    onShare: () -> Unit,
+    onDelete: () -> Unit,
+    onRename: () -> Unit,
+    onCancel: () -> Unit
 ) {
-    val context = LocalContext.current
-
-    val bitmapState = produceState<Bitmap?>(initialValue = null, video.uri) {
-        value = withContext(Dispatchers.IO) {
-            try {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    context.contentResolver.loadThumbnail(
-                        video.uri,
-                        Size(512, 512),
-                        null
-                    )
-                } else {
-                    null
-                }
-            } catch (_: Exception) {
-                null
-            }
-        }
-    }
-
-    val bitmap = bitmapState.value
-
-    if (bitmap != null) {
-        Image(
-            bitmap = bitmap.asImageBitmap(),
-            contentDescription = video.name,
-            modifier = modifier,
-            contentScale = ContentScale.Crop
-        )
-    } else {
-        Box(
-            modifier = modifier.background(MaterialTheme.colorScheme.surfaceVariant),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "▶",
-                style = MaterialTheme.typography.displaySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-}
-
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-fun VideoGridCard(
-    video: VideoItem,
-    favorite: Boolean,
-    selected: Boolean,
-    selectionMode: Boolean,
-    onOpen: () -> Unit,
-    onToggleSelected: () -> Unit,
-    onFavorite: () -> Unit
-) {
-    Column(
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .combinedClickable(
-                onClick = {
-                    if (selectionMode) {
-                        onToggleSelected()
-                    } else {
-                        onOpen()
-                    }
-                },
-                onLongClick = {
-                    onToggleSelected()
-                }
-            )
-    ) {
-        Box {
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(3.dp),
-                color = Color.Transparent,
-                border = if (selected) {
-                    BorderStroke(3.dp, MaterialTheme.colorScheme.primary)
-                } else {
-                    null
-                }
-            ) {
-                Box {
-                    VideoThumbnail(
-                        video = video,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(126.dp)
-                            .clip(RoundedCornerShape(2.dp))
-                    )
-
-                    if (selected) {
-                        Surface(
-                            modifier = Modifier
-                                .align(Alignment.TopStart)
-                                .padding(6.dp),
-                            shape = RoundedCornerShape(100.dp),
-                            color = MaterialTheme.colorScheme.primary
-                        ) {
-                            Text(
-                                text = "✓",
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-                                color = MaterialTheme.colorScheme.onPrimary,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
-
-                    Surface(
-                        modifier = Modifier
-                            .align(Alignment.BottomEnd)
-                            .padding(5.dp),
-                        color = Color.Black.copy(alpha = 0.62f),
-                        shape = RoundedCornerShape(2.dp)
-                    ) {
-                        Text(
-                            text = formatDuration(video.durationMs),
-                            color = Color.White,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                            fontSize = 14.sp
-                        )
-                    }
-                }
-            }
-        }
-
-        Spacer(Modifier.height(7.dp))
-
-        Text(
-            text = video.name,
-            modifier = Modifier.fillMaxWidth(),
-            textAlign = TextAlign.Center,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            fontSize = 15.sp,
-            color = MaterialTheme.colorScheme.onBackground
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        shape = RoundedCornerShape(24.dp),
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.18f),
+        border = BorderStroke(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.18f)
         )
-
-        Spacer(Modifier.height(3.dp))
-
-        Text(
-            text = "${formatDuration(video.durationMs)} • ${formatSize(video.sizeBytes)} • ${video.width}×${video.height}",
-            modifier = Modifier.fillMaxWidth(),
-            textAlign = TextAlign.Center,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            fontSize = 12.sp,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
-}
-
-@Composable
-fun VideoListCard(
-    video: VideoItem,
-    favorite: Boolean,
-    onOpen: () -> Unit,
-    onFavorite: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onOpen() }
-            .padding(vertical = 6.dp),
-        verticalAlignment = Alignment.CenterVertically
     ) {
-        VideoThumbnail(
-            video = video,
-            modifier = Modifier
-                .size(width = 126.dp, height = 78.dp)
-                .clip(RoundedCornerShape(4.dp))
-        )
-
-        Spacer(Modifier.width(12.dp))
-
-        Column(Modifier.weight(1f)) {
-            Text(
-                text = video.name,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                fontSize = 17.sp,
-                color = MaterialTheme.colorScheme.onBackground
-            )
-
-            Spacer(Modifier.height(4.dp))
-
-            Text(
-                text = "${formatDuration(video.durationMs)} • ${formatSize(video.sizeBytes)} • ${video.width}×${video.height}",
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                fontSize = 13.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            Text(
-                text = video.folderName,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                fontSize = 13.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-
-        Text(
-            text = "⋮",
-            fontSize = 24.sp,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(start = 8.dp)
-        )
-    }
-}
-
-
-@Composable
-fun FoldersScreen(
-    folders: List<VideoFolder>,
-    onOpenFolder: (VideoFolder) -> Unit
-) {
-    if (folders.isEmpty()) {
-        EmptyView("No video folders found")
-        return
-    }
-
-    LazyColumn(
-        contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 0.dp, bottom = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        items(folders, key = { it.name }) { folder ->
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onOpenFolder(folder) },
-                shape = RoundedCornerShape(22.dp),
-                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.10f),
-                border = BorderStroke(
-                    width = 1.dp,
-                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.12f)
-                )
-            ) {
-                Row(
-                    modifier = Modifier.padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        "▣",
-                        fontSize = 30.sp,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-
-                    Spacer(Modifier.width(14.dp))
-
-                    Column(Modifier.weight(1f)) {
-                        Text(
-                            folder.name,
-                            fontWeight = FontWeight.Bold,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-
-                        Text(
-                            "${folder.count} videos • ${formatSize(folder.totalSizeBytes)}",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-
-                    Text(
-                        "›",
-                        fontSize = 28.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-        }
-    }
-}
-
-
-
-@Composable
-fun EmptyView(message: String) {
-    Box(
-        Modifier
-            .fillMaxSize()
-            .padding(28.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        ElevatedCard(
-            shape = RoundedCornerShape(32.dp),
-            colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
+        Row(
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(
-                modifier = Modifier.padding(28.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text("No content", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-                Spacer(Modifier.height(6.dp))
-                Text(message, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-        }
-    }
-}
-
-@Composable
-fun PermissionDeniedView(context: Context) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(28.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        ElevatedCard(shape = RoundedCornerShape(32.dp)) {
-            Column(
-                modifier = Modifier.padding(28.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text("Permission needed", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    "Allow video access so the app can organize your library.",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(Modifier.height(18.dp))
-                Button(onClick = {
-                    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                        data = Uri.parse("package:${context.packageName}")
-                    }
-                    context.startActivity(intent)
-                }) {
-                    Text("Open Settings")
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun VideoPreviewDialog(
-    context: Context,
-    video: VideoItem,
-    onDismiss: () -> Unit
-) {
-    var showPlayerPicker by remember { mutableStateOf(false) }
-    val defaultPackage = remember { getDefaultVideoPlayerPackage(context) }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
             Text(
-                text = video.name,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                fontWeight = FontWeight.ExtraBold
+                "$count selected",
+                modifier = Modifier.weight(1f),
+                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp
             )
-        },
-        text = {
-            Column {
-                Image(
-                    painter = rememberAsyncImagePainter(video.uri),
-                    contentDescription = video.name,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(220.dp)
-                        .clip(RoundedCornerShape(26.dp)),
-                    contentScale = ContentScale.Crop
-                )
 
-                Spacer(Modifier.height(12.dp))
+            TextButton(onClick = onShare) { Text("Share") }
 
-                Text(
-                    text = "${formatDuration(video.durationMs)} • ${formatSize(video.sizeBytes)} • ${video.width}×${video.height}",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                Text(
-                    text = video.folderName,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-
-                Spacer(Modifier.height(14.dp))
-
-                Button(
-                    modifier = Modifier.fillMaxWidth(),
-                    onClick = { showPlayerPicker = true }
-                ) {
-                    Text(
-                        if (defaultPackage.isNullOrBlank())
-                            "Choose default player for this library"
-                        else
-                            "Change default player"
-                    )
-                }
-
-                TextButton(
-                    modifier = Modifier.fillMaxWidth(),
-                    onClick = {
-                        openVideoExternally(context, video)
-                        onDismiss()
-                    }
-                ) {
-                    Text("Open with system chooser")
-                }
+            if (canRename) {
+                TextButton(onClick = onRename) { Text("Rename") }
             }
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    openVideoWithPreferredPlayer(context, video)
-                    onDismiss()
-                }
-            ) {
-                Text("Open")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
-            }
+
+            TextButton(onClick = onDelete) { Text("Delete") }
+            TextButton(onClick = onCancel) { Text("Cancel") }
         }
-    )
-
-    if (showPlayerPicker) {
-        PlayerPickerDialog(
-            context = context,
-            video = video,
-            onDismiss = { showPlayerPicker = false },
-            onPlayerSelected = { packageName ->
-                saveDefaultVideoPlayerPackage(context, packageName)
-                showPlayerPicker = false
-            }
-        )
     }
 }
 
-@Composable
-fun PlayerPickerDialog(
-    context: Context,
-    video: VideoItem,
-    onDismiss: () -> Unit,
-    onPlayerSelected: (String) -> Unit
-) {
-    val players = remember(video.uri) { listVideoPlayers(context, video) }
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Default video player") },
-        text = {
-            if (players.isEmpty()) {
-                Text("No external video players were found.")
-            } else {
-                LazyColumn(
-                    modifier = Modifier.height(320.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(players) { player ->
-                        val packageName = player.activityInfo.packageName
-                        val appName = player.loadLabel(context.packageManager).toString()
 
-                        Surface(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { onPlayerSelected(packageName) },
-                            shape = RoundedCornerShape(18.dp),
-                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
-                        ) {
-                            Text(
-                                text = appName,
-                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 13.dp),
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
-                }
-            }
-        },
-        confirmButton = {},
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
-            }
-        }
-    )
-}
 
-fun listVideoPlayers(context: Context, video: VideoItem): List<ResolveInfo> {
-    val intent = Intent(Intent.ACTION_VIEW).apply {
-        setDataAndType(video.uri, video.mimeType)
-        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-    }
 
-    return context.packageManager.queryIntentActivities(intent, 0)
-}
 
-fun getDefaultVideoPlayerPackage(context: Context): String? {
-    return context
-        .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        .getString(KEY_DEFAULT_PLAYER_PACKAGE, null)
-}
 
-fun saveDefaultVideoPlayerPackage(context: Context, packageName: String) {
-    context
-        .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        .edit()
-        .putString(KEY_DEFAULT_PLAYER_PACKAGE, packageName)
-        .apply()
-}
 
-fun openVideoWithPreferredPlayer(context: Context, video: VideoItem) {
-    val packageName = getDefaultVideoPlayerPackage(context)
 
-    if (packageName.isNullOrBlank()) {
-        openVideoExternally(context, video)
-        return
-    }
 
-    val intent = Intent(Intent.ACTION_VIEW).apply {
-        setDataAndType(video.uri, video.mimeType)
-        setPackage(packageName)
-        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-    }
 
-    try {
-        context.startActivity(intent)
-    } catch (_: Exception) {
-        openVideoExternally(context, video)
-    }
-}
+
+
+
 
 @Composable
 fun RenameVideoDialog(
@@ -1310,8 +884,6 @@ fun RenameVideoDialog(
 }
 
 
-
-
 fun shareVideos(context: Context, videos: List<VideoItem>) {
     if (videos.isEmpty()) return
 
@@ -1326,7 +898,6 @@ fun shareVideos(context: Context, videos: List<VideoItem>) {
 
     context.startActivity(Intent.createChooser(intent, "Share videos"))
 }
-
 
 
 fun requestDeleteVideos(
@@ -1352,7 +923,6 @@ fun requestDeleteVideos(
         Toast.makeText(context, "Deleted", Toast.LENGTH_SHORT).show()
     }
 }
-
 
 
 fun renameVideo(
@@ -1386,8 +956,6 @@ fun renameVideo(
         false
     }
 }
-
-
 
 
 fun openVideoDirectly(context: Context, video: VideoItem) {
