@@ -107,7 +107,6 @@ class MainActivity : ComponentActivity() {
 fun VideoLibraryApp(viewModel: VideoLibraryViewModel) {
     val context = LocalContext.current
     val state by viewModel.state.collectAsStateWithLifecycle()
-    var previewVideo by remember { mutableStateOf<VideoItem?>(null) }
 
     val permission = if (Build.VERSION.SDK_INT >= 33) {
         Manifest.permission.READ_MEDIA_VIDEO
@@ -167,7 +166,7 @@ fun VideoLibraryApp(viewModel: VideoLibraryViewModel) {
                         videos = state.filteredVideos,
                         favorites = state.favorites,
                         viewMode = state.viewMode,
-                        onOpen = { previewVideo = it },
+                        onOpen = { openVideoDirectly(context, it) },
                         onFavorite = { viewModel.toggleFavorite(it.id) }
                     )
 
@@ -180,7 +179,7 @@ fun VideoLibraryApp(viewModel: VideoLibraryViewModel) {
                         videos = state.videos.filter { it.id in state.favorites },
                         favorites = state.favorites,
                         viewMode = state.viewMode,
-                        onOpen = { previewVideo = it },
+                        onOpen = { openVideoDirectly(context, it) },
                         onFavorite = { viewModel.toggleFavorite(it.id) }
                     )
                 }
@@ -190,14 +189,6 @@ fun VideoLibraryApp(viewModel: VideoLibraryViewModel) {
                 selected = state.selectedTab,
                 onSelect = viewModel::setTab
             )
-
-            previewVideo?.let { video ->
-                VideoPreviewDialog(
-                    context = context,
-                    video = video,
-                    onDismiss = { previewVideo = null }
-                )
-            }
         }
     }
 }
@@ -822,6 +813,19 @@ fun openVideoWithPreferredPlayer(context: Context, video: VideoItem) {
         context.startActivity(intent)
     } catch (_: Exception) {
         openVideoExternally(context, video)
+    }
+}
+
+fun openVideoDirectly(context: Context, video: VideoItem) {
+    val intent = Intent(Intent.ACTION_VIEW).apply {
+        setDataAndType(video.uri, video.mimeType)
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    }
+
+    try {
+        context.startActivity(intent)
+    } catch (_: Exception) {
+        context.startActivity(Intent.createChooser(intent, "Open video with"))
     }
 }
 
