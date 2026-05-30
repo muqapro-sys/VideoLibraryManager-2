@@ -153,18 +153,22 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun StatusBarGradientHaze() {
-    val isDark = androidx.compose.foundation.isSystemInDarkTheme()
+    val configuration = androidx.compose.ui.platform.LocalConfiguration.current
+
+    val isDark =
+        (configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) ==
+            android.content.res.Configuration.UI_MODE_NIGHT_YES
 
     val topColor = if (isDark) {
-        androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.58f)
+        androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.68f)
     } else {
-        androidx.compose.ui.graphics.Color.White.copy(alpha = 0.72f)
+        androidx.compose.ui.graphics.Color.White.copy(alpha = 0.78f)
     }
 
     val midColor = if (isDark) {
-        androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.30f)
+        androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.34f)
     } else {
-        androidx.compose.ui.graphics.Color.White.copy(alpha = 0.38f)
+        androidx.compose.ui.graphics.Color.White.copy(alpha = 0.40f)
     }
 
     val bottomColor = if (isDark) {
@@ -176,7 +180,7 @@ fun StatusBarGradientHaze() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(92.dp)
+            .height(64.dp)
             .background(
                 brush = androidx.compose.ui.graphics.Brush.verticalGradient(
                     colors = listOf(
@@ -188,6 +192,10 @@ fun StatusBarGradientHaze() {
             )
     )
 }
+
+
+
+
 
 
 @Composable
@@ -221,14 +229,6 @@ fun VideoLibraryApp(viewModel: VideoLibraryViewModel) {
         color = MaterialTheme.colorScheme.background
     ) {
         Box(Modifier.fillMaxSize()) {
-
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .fillMaxWidth()
-            ) {
-                StatusBarGradientHaze()
-            }
 
             Box(Modifier.fillMaxSize()) {
                 when {
@@ -287,6 +287,14 @@ fun VideoLibraryApp(viewModel: VideoLibraryViewModel) {
                     onRefresh = viewModel::scanVideos,
                     onTabSelect = viewModel::setTab
                 )
+            }
+
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .fillMaxWidth()
+            ) {
+                StatusBarGradientHaze()
             }
 
             if (state.selectedFolder != null) {
