@@ -5,65 +5,50 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <!-- Soft rounded base -->
     <path
         android:fillColor="#111827"
-        android:pathData="M28,8 L80,8 Q100,8 100,28 L100,80 Q100,100 80,100 L28,100 Q8,100 8,80 L8,28 Q8,8 28,8 Z" />
+        android:pathData="M24,8 L84,8 Q100,8 100,24 L100,84 Q100,100 84,100 L24,100 Q8,100 8,84 L8,24 Q8,8 24,8 Z" />
 
-    <!-- Subtle blue glow -->
     <path
-        android:fillColor="#223BFF"
-        android:fillAlpha="0.35"
-        android:pathData="M22,15 C45,3 76,8 92,29 C76,23 47,25 28,43 C16,54 10,73 13,91 C4,66 4,28 22,15 Z" />
+        android:fillColor="#2563EB"
+        android:fillAlpha="0.45"
+        android:pathData="M16,26 C28,8 58,2 84,18 C67,20 45,31 31,48 C20,62 15,78 18,94 C6,72 4,45 16,26 Z" />
 
-    <!-- Subtle violet glow -->
     <path
         android:fillColor="#A855F7"
-        android:fillAlpha="0.32"
-        android:pathData="M92,82 C77,101 44,105 22,92 C40,86 58,77 70,60 C81,44 91,29 95,16 C104,40 106,66 92,82 Z" />
+        android:fillAlpha="0.35"
+        android:pathData="M91,84 C74,103 39,105 18,91 C42,84 64,70 78,47 C88,31 93,18 96,11 C106,38 107,67 91,84 Z" />
 
-    <!-- Video library back card -->
     <path
         android:fillColor="#FFFFFF"
         android:fillAlpha="0.18"
-        android:pathData="M30,31 L72,31 Q78,31 78,37 L78,65 Q78,71 72,71 L30,71 Q24,71 24,65 L24,37 Q24,31 30,31 Z" />
+        android:pathData="M27,29 L72,29 Q80,29 80,37 L80,67 Q80,75 72,75 L27,75 Q19,75 19,67 L19,37 Q19,29 27,29 Z" />
 
-    <!-- Video library front card -->
     <path
         android:fillColor="#FFFFFF"
-        android:fillAlpha="0.30"
-        android:pathData="M36,38 L80,38 Q86,38 86,44 L86,73 Q86,79 80,79 L36,79 Q30,79 30,73 L30,44 Q30,38 36,38 Z" />
+        android:fillAlpha="0.34"
+        android:pathData="M35,36 L82,36 Q90,36 90,44 L90,76 Q90,84 82,84 L35,84 Q27,84 27,76 L27,44 Q27,36 35,36 Z" />
 
-    <!-- Film perforations left -->
     <path
-        android:fillColor="#111827"
-        android:fillAlpha="0.65"
-        android:pathData="M37,45 L43,45 L43,51 L37,51 Z
-                          M37,56 L43,56 L43,62 L37,62 Z
-                          M37,67 L43,67 L43,73 L37,73 Z" />
+        android:fillColor="#0F172A"
+        android:fillAlpha="0.72"
+        android:pathData="M35,45 L42,45 L42,52 L35,52 Z
+                          M35,57 L42,57 L42,64 L35,64 Z
+                          M35,69 L42,69 L42,76 L35,76 Z
+                          M75,45 L82,45 L82,52 L75,52 Z
+                          M75,57 L82,57 L82,64 L75,64 Z
+                          M75,69 L82,69 L82,76 L75,76 Z" />
 
-    <!-- Film perforations right -->
-    <path
-        android:fillColor="#111827"
-        android:fillAlpha="0.65"
-        android:pathData="M73,45 L79,45 L79,51 L73,51 Z
-                          M73,56 L79,56 L79,62 L73,62 Z
-                          M73,67 L79,67 L79,73 L73,73 Z" />
-
-    <!-- Play circle -->
     <path
         android:fillColor="#DBEAFE"
-        android:fillAlpha="0.96"
-        android:pathData="M58,48 A12,12 0,1 1,57.9,48 Z" />
+        android:pathData="M59,48 A13,13 0,1 1,58.9,48 Z" />
 
-    <!-- Play triangle -->
     <path
         android:fillColor="#2563EB"
-        android:pathData="M55,54 L55,66 L66,60 Z" />
+        android:pathData="M56,54 L56,67 L68,60.5 Z" />
 
-    <!-- Soft highlight -->
     <path
         android:fillColor="#FFFFFF"
-        android:fillAlpha="0.24"
-        android:pathData="M28,13 C48,8 72,10 88,24 C70,18 47,19 28,30 C18,36 13,47 10,60 C9,39 13,20 28,13 Z" />
+        android:fillAlpha="0.25"
+        android:pathData="M27,13 C49,7 73,11 89,25 C69,20 45,23 28,35 C17,43 12,56 10,70 C8,45 12,23 27,13 Z" />
 </vector>
