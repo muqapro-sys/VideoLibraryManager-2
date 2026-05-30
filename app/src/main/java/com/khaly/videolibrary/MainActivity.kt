@@ -152,6 +152,45 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
+fun StatusBarGradientHaze() {
+    val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
+
+    val topColor = if (isDark) {
+        androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.58f)
+    } else {
+        androidx.compose.ui.graphics.Color.White.copy(alpha = 0.72f)
+    }
+
+    val midColor = if (isDark) {
+        androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.30f)
+    } else {
+        androidx.compose.ui.graphics.Color.White.copy(alpha = 0.38f)
+    }
+
+    val bottomColor = if (isDark) {
+        androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.00f)
+    } else {
+        androidx.compose.ui.graphics.Color.White.copy(alpha = 0.00f)
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(92.dp)
+            .background(
+                brush = androidx.compose.ui.graphics.Brush.verticalGradient(
+                    colors = listOf(
+                        topColor,
+                        midColor,
+                        bottomColor
+                    )
+                )
+            )
+    )
+}
+
+
+@Composable
 fun VideoLibraryApp(viewModel: VideoLibraryViewModel) {
     val context = LocalContext.current
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -182,6 +221,14 @@ fun VideoLibraryApp(viewModel: VideoLibraryViewModel) {
         color = MaterialTheme.colorScheme.background
     ) {
         Box(Modifier.fillMaxSize()) {
+
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .fillMaxWidth()
+            ) {
+                StatusBarGradientHaze()
+            }
 
             Box(Modifier.fillMaxSize()) {
                 when {
