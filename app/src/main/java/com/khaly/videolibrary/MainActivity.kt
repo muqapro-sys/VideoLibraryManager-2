@@ -183,7 +183,6 @@ fun VideoLibraryApp(viewModel: VideoLibraryViewModel) {
     ) {
         Box(Modifier.fillMaxSize()) {
 
-            // المحتوى يبدأ من أعلى الشاشة، لذلك لا توجد مساحة سوداء محجوزة للهيدر
             Box(Modifier.fillMaxSize()) {
                 when {
                     state.isLoading -> Box(
@@ -222,7 +221,6 @@ fun VideoLibraryApp(viewModel: VideoLibraryViewModel) {
                 }
             }
 
-            // الهيدر العلوي أصبح عائمًا فوق المحتوى
             Box(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
@@ -237,7 +235,8 @@ fun VideoLibraryApp(viewModel: VideoLibraryViewModel) {
                         )
                     },
                     onSortChanged = viewModel::setSortMode,
-                    onRefresh = viewModel::scanVideos
+                    onRefresh = viewModel::scanVideos,
+                    onTabSelect = viewModel::setTab
                 )
             }
 
@@ -251,17 +250,6 @@ fun VideoLibraryApp(viewModel: VideoLibraryViewModel) {
                     label = { Text("Folder: ${state.selectedFolder}  ×") }
                 )
             }
-
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .fillMaxWidth()
-            ) {
-                OneUiBottomNav(
-                    selected = if (state.selectedTab == 1) 1 else 0,
-                    onSelect = viewModel::setTab
-                )
-            }
         }
     }
 }
@@ -271,6 +259,50 @@ fun VideoLibraryApp(viewModel: VideoLibraryViewModel) {
 
 
 
+
+
+
+
+@Composable
+fun GlassTopTabButton(
+    text: String,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    Surface(
+        onClick = onClick,
+        modifier = Modifier.size(48.dp),
+        shape = RoundedCornerShape(20.dp),
+        color = if (selected)
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.28f)
+        else
+            MaterialTheme.colorScheme.surface.copy(alpha = 0.38f),
+        tonalElevation = 0.dp,
+        shadowElevation = 0.dp,
+        border = BorderStroke(
+            width = 1.dp,
+            color = if (selected)
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.52f)
+            else
+                MaterialTheme.colorScheme.outline.copy(alpha = 0.22f)
+        )
+    ) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier.fillMaxSize()
+        ) {
+            Text(
+                text = text,
+                fontSize = 27.sp,
+                fontWeight = FontWeight.Bold,
+                color = if (selected)
+                    MaterialTheme.colorScheme.primary
+                else
+                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.96f)
+            )
+        }
+    }
+}
 
 
 @Composable
@@ -319,7 +351,8 @@ fun OneUiLargeHeader(
     onQueryChanged: (String) -> Unit,
     onToggleView: () -> Unit,
     onSortChanged: (SortMode) -> Unit,
-    onRefresh: () -> Unit
+    onRefresh: () -> Unit,
+    onTabSelect: (Int) -> Unit
 ) {
     var searchActive by remember { mutableStateOf(state.query.isNotBlank()) }
 
@@ -343,8 +376,20 @@ fun OneUiLargeHeader(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                GlassTopTabButton(
+                    text = "▦",
+                    selected = state.selectedTab == 0,
+                    onClick = { onTabSelect(0) }
+                )
+
+                GlassTopTabButton(
+                    text = "▣",
+                    selected = state.selectedTab == 1,
+                    onClick = { onTabSelect(1) }
+                )
+
                 GlassIconButton(
-                    text = if (state.viewMode == ViewMode.GRID) "☷" else "▦",
+                    text = if (state.viewMode == ViewMode.GRID) "☷" else "▤",
                     onClick = onToggleView
                 )
 
@@ -391,6 +436,8 @@ fun OneUiLargeHeader(
         }
     }
 }
+
+
 
 
 
