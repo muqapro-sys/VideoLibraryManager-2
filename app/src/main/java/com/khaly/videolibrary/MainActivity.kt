@@ -300,6 +300,8 @@ fun OneUiLargeHeader(
     onSortChanged: (SortMode) -> Unit,
     onRefresh: () -> Unit
 ) {
+    var searchActive by remember { mutableStateOf(state.query.isNotBlank()) }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -322,7 +324,7 @@ fun OneUiLargeHeader(
                     text = if (state.selectedTab == 1)
                         "${state.folders.size} Folders"
                     else
-                        "${state.videos.size} Videos",
+                        "${state.filteredVideos.size} Videos",
                     fontSize = 14.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -338,8 +340,15 @@ fun OneUiLargeHeader(
                 )
 
                 GlassIconButton(
-                    text = "⌕",
-                    onClick = { }
+                    text = if (searchActive) "×" else "⌕",
+                    onClick = {
+                        if (searchActive) {
+                            searchActive = false
+                            onQueryChanged("")
+                        } else {
+                            searchActive = true
+                        }
+                    }
                 )
 
                 GlassSortButton(
@@ -349,7 +358,19 @@ fun OneUiLargeHeader(
             }
         }
 
-        if (state.selectedTab == 0) {
+        if (searchActive) {
+            Spacer(Modifier.height(10.dp))
+
+            OutlinedTextField(
+                value = state.query,
+                onValueChange = onQueryChanged,
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                shape = RoundedCornerShape(22.dp),
+                label = { Text("Search videos") },
+                placeholder = { Text("Type video name...") }
+            )
+        } else if (state.selectedTab == 0) {
             Spacer(Modifier.height(10.dp))
 
             Row(
@@ -371,21 +392,10 @@ fun OneUiLargeHeader(
                 )
             }
         }
-
-        if (state.query.isNotBlank()) {
-            Spacer(Modifier.height(8.dp))
-
-            OutlinedTextField(
-                value = state.query,
-                onValueChange = onQueryChanged,
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                shape = RoundedCornerShape(22.dp),
-                label = { Text("Search videos") }
-            )
-        }
     }
 }
+
+
 
 
 
