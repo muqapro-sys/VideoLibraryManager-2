@@ -1147,3 +1147,235 @@ fun formatSize(bytes: Long): String {
     }
     return DecimalFormat("#,##0.#").format(size) + " " + units[index]
 }
+
+
+
+@Composable
+fun EmptyView(message: String) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(28.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Surface(
+            shape = RoundedCornerShape(28.dp),
+            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.18f),
+            border = BorderStroke(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.18f)
+            )
+        ) {
+            Column(
+                modifier = Modifier.padding(28.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "No content",
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Spacer(Modifier.height(6.dp))
+
+                Text(
+                    text = message,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun VideoGridCard(
+    video: VideoItem,
+    favorite: Boolean,
+    selected: Boolean,
+    selectionMode: Boolean,
+    onOpen: () -> Unit,
+    onToggleSelected: () -> Unit,
+    onFavorite: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .combinedClickable(
+                onClick = {
+                    if (selectionMode) {
+                        onToggleSelected()
+                    } else {
+                        onOpen()
+                    }
+                },
+                onLongClick = {
+                    onToggleSelected()
+                }
+            )
+    ) {
+        Box {
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(3.dp),
+                color = Color.Transparent,
+                border = if (selected) {
+                    BorderStroke(3.dp, MaterialTheme.colorScheme.primary)
+                } else {
+                    null
+                }
+            ) {
+                Box {
+                    VideoThumbnail(
+                        video = video,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(126.dp)
+                            .clip(RoundedCornerShape(2.dp))
+                    )
+
+                    if (selected) {
+                        Surface(
+                            modifier = Modifier
+                                .align(Alignment.TopStart)
+                                .padding(6.dp),
+                            shape = RoundedCornerShape(100.dp),
+                            color = MaterialTheme.colorScheme.primary
+                        ) {
+                            Text(
+                                text = "✓",
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+
+                    Surface(
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(5.dp),
+                        color = Color.Black.copy(alpha = 0.62f),
+                        shape = RoundedCornerShape(2.dp)
+                    ) {
+                        Text(
+                            text = formatDuration(video.durationMs),
+                            color = Color.White,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                            fontSize = 14.sp
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(Modifier.height(7.dp))
+
+        Text(
+            text = video.name,
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            fontSize = 15.sp,
+            color = MaterialTheme.colorScheme.onBackground
+        )
+
+        Spacer(Modifier.height(3.dp))
+
+        Text(
+            text = "${formatDuration(video.durationMs)} • ${formatSize(video.sizeBytes)} • ${video.width}×${video.height}",
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            fontSize = 12.sp,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun VideoListCard(
+    video: VideoItem,
+    favorite: Boolean,
+    selected: Boolean,
+    selectionMode: Boolean,
+    onOpen: () -> Unit,
+    onToggleSelected: () -> Unit,
+    onFavorite: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .combinedClickable(
+                onClick = {
+                    if (selectionMode) {
+                        onToggleSelected()
+                    } else {
+                        onOpen()
+                    }
+                },
+                onLongClick = {
+                    onToggleSelected()
+                }
+            )
+            .padding(vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Surface(
+            shape = RoundedCornerShape(4.dp),
+            border = if (selected) {
+                BorderStroke(3.dp, MaterialTheme.colorScheme.primary)
+            } else {
+                null
+            },
+            color = Color.Transparent
+        ) {
+            VideoThumbnail(
+                video = video,
+                modifier = Modifier
+                    .size(width = 126.dp, height = 78.dp)
+                    .clip(RoundedCornerShape(4.dp))
+            )
+        }
+
+        Spacer(Modifier.width(12.dp))
+
+        Column(Modifier.weight(1f)) {
+            Text(
+                text = video.name,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                fontSize = 17.sp,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+
+            Spacer(Modifier.height(4.dp))
+
+            Text(
+                text = "${formatDuration(video.durationMs)} • ${formatSize(video.sizeBytes)} • ${video.width}×${video.height}",
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                fontSize = 13.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Text(
+                text = video.folderName,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                fontSize = 13.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
+        Text(
+            text = if (selected) "✓" else "⋮",
+            fontSize = 24.sp,
+            color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(start = 8.dp)
+        )
+    }
+}
