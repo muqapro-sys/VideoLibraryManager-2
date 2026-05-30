@@ -302,6 +302,11 @@ fun OneUiLargeHeader(
 ) {
     var searchActive by remember { mutableStateOf(state.query.isNotBlank()) }
 
+    BackHandler(enabled = searchActive) {
+        searchActive = false
+        onQueryChanged("")
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -340,14 +345,9 @@ fun OneUiLargeHeader(
                 )
 
                 GlassIconButton(
-                    text = if (searchActive) "×" else "⌕",
+                    text = "⌕",
                     onClick = {
-                        if (searchActive) {
-                            searchActive = false
-                            onQueryChanged("")
-                        } else {
-                            searchActive = true
-                        }
+                        searchActive = true
                     }
                 )
 
@@ -394,6 +394,8 @@ fun OneUiLargeHeader(
         }
     }
 }
+
+
 
 
 
