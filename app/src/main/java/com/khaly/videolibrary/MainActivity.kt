@@ -1,11 +1,13 @@
 package com.khaly.videolibrary
 
 import android.Manifest
+import android.app.RecoverableSecurityException
 import android.content.Context
 import android.content.res.Configuration
 import android.content.ContentValues
 import android.content.ClipData
 import android.content.Intent
+import android.content.IntentSender
 import android.graphics.Bitmap
 import android.content.pm.ResolveInfo
 import android.net.Uri
@@ -19,8 +21,10 @@ import android.provider.MediaStore
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.compose.BackHandler
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.result.IntentSenderRequest
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.viewModels
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -216,8 +220,16 @@ fun VideoLibraryApp(viewModel: VideoLibraryViewModel) {
                             videos = state.filteredVideos,
                             favorites = state.favorites,
                             viewMode = state.viewMode,
-                            onOpen = { openVideoDirectly(context, it) },
-                            onFavorite = { viewModel.toggleFavorite(it.id) }
+                            onOpen = { video ->
+                                if (isVideoUriValid(context, video)) {
+                                    openVideoDirectly(context, video)
+                                } else {
+                                    Toast.makeText(context, "Video no longer exists", Toast.LENGTH_SHORT).show()
+                                    viewModel.scanVideos()
+                                }
+                            },
+                            onFavorite = { viewModel.toggleFavorite(it.id) },
+                            onRefresh = viewModel::scanVideos
                         )
                     }
                 }
@@ -802,7 +814,8 @@ fun VideosScreen(
     favorites: Set<Long>,
     viewMode: ViewMode,
     onOpen: (VideoItem) -> Unit,
-    onFavorite: (VideoItem) -> Unit
+    onFavorite: (VideoItem) -> Unit,
+    onRefresh: () -> Unit
 ) {
     if (videos.isEmpty()) {
         EmptyView("No videos found")
@@ -810,15 +823,44 @@ fun VideosScreen(
     }
 
     val context = LocalContext.current
+
     var selectedIds by remember { mutableStateOf(setOf<Long>()) }
     var renameVideo by remember { mutableStateOf<VideoItem?>(null) }
+    var pendingRename by remember { mutableStateOf<Pair<VideoItem, String>?>(null) }
 
     val selectedVideos = videos.filter { it.id in selectedIds }
+
+    BackHandler(enabled = selectedIds.isNotEmpty()) {
+        selectedIds = emptySet()
+        renameVideo = null
+    }
 
     val deleteLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartIntentSenderForResult()
     ) {
         selectedIds = emptySet()
+        onRefresh()
+    }
+
+    val renamePermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartIntentSenderForResult()
+    ) {
+        val pending = pendingRename
+        pendingRename = null
+
+        if (pending != null) {
+            val ok = renameVideoFileDirect(context, pending.first, pending.second)
+
+            Toast.makeText(
+                context,
+                if (ok) "Renamed" else "Rename failed",
+                Toast.LENGTH_SHORT
+            ).show()
+
+            selectedIds = emptySet()
+            renameVideo = null
+            onRefresh()
+        }
     }
 
     Column {
@@ -827,11 +869,22 @@ fun VideosScreen(
                 count = selectedIds.size,
                 canRename = selectedIds.size == 1,
                 onShare = { shareVideos(context, selectedVideos) },
-                onDelete = { requestDeleteVideos(context, selectedVideos, deleteLauncher) },
-                onRename = {
-                    if (selectedVideos.size == 1) renameVideo = selectedVideos.first()
+                onDelete = {
+                    requestDeleteVideos(
+                        context = context,
+                        videos = selectedVideos,
+                        launcher = deleteLauncher,
+                        onDeletedWithoutSystemDialog = {
+                            selectedIds = emptySet()
+                            onRefresh()
+                        }
+                    )
                 },
-                onCancel = { selectedIds = emptySet() }
+                onRename = {
+                    if (selectedVideos.size == 1) {
+                        renameVideo = selectedVideos.first()
+                    }
+                }
             )
         }
 
@@ -891,20 +944,39 @@ fun VideosScreen(
             video = video,
             onDismiss = { renameVideo = null },
             onRename = { newName ->
-                val ok = renameVideo(context, video, newName)
+                val result = renameVideoFile(
+                    context = context,
+                    video = video,
+                    newName = newName,
+                    launcher = renamePermissionLauncher,
+                    rememberPending = {
+                        pendingRename = video to newName
+                    }
+                )
 
-                Toast.makeText(
-                    context,
-                    if (ok) "Renamed" else "Rename failed",
-                    Toast.LENGTH_SHORT
-                ).show()
+                when (result) {
+                    RenameResult.SUCCESS -> {
+                        Toast.makeText(context, "Renamed", Toast.LENGTH_SHORT).show()
+                        renameVideo = null
+                        selectedIds = emptySet()
+                        onRefresh()
+                    }
 
-                renameVideo = null
-                selectedIds = emptySet()
+                    RenameResult.PERMISSION_REQUESTED -> {
+                        // ننتظر موافقة النظام ثم نكمل في launcher
+                    }
+
+                    RenameResult.FAILED -> {
+                        Toast.makeText(context, "Rename failed", Toast.LENGTH_SHORT).show()
+                        renameVideo = null
+                    }
+                }
             }
         )
     }
 }
+
+
 
 
 @Composable
@@ -913,8 +985,7 @@ fun SelectionActionBar(
     canRename: Boolean,
     onShare: () -> Unit,
     onDelete: () -> Unit,
-    onRename: () -> Unit,
-    onCancel: () -> Unit
+    onRename: () -> Unit
 ) {
     Surface(
         modifier = Modifier
@@ -938,17 +1009,24 @@ fun SelectionActionBar(
                 fontSize = 16.sp
             )
 
-            TextButton(onClick = onShare) { Text("Share") }
-
-            if (canRename) {
-                TextButton(onClick = onRename) { Text("Rename") }
+            TextButton(onClick = onShare) {
+                Text("Share")
             }
 
-            TextButton(onClick = onDelete) { Text("Delete") }
-            TextButton(onClick = onCancel) { Text("Cancel") }
+            if (canRename) {
+                TextButton(onClick = onRename) {
+                    Text("Rename")
+                }
+            }
+
+            TextButton(onClick = onDelete) {
+                Text("Delete")
+            }
         }
     }
 }
+
+
 
 
 
@@ -1017,7 +1095,8 @@ fun shareVideos(context: Context, videos: List<VideoItem>) {
 fun requestDeleteVideos(
     context: Context,
     videos: List<VideoItem>,
-    launcher: androidx.activity.result.ActivityResultLauncher<IntentSenderRequest>
+    launcher: ActivityResultLauncher<IntentSenderRequest>,
+    onDeletedWithoutSystemDialog: () -> Unit
 ) {
     if (videos.isEmpty()) return
 
@@ -1026,6 +1105,7 @@ fun requestDeleteVideos(
             context.contentResolver,
             videos.map { it.uri }
         )
+
         launcher.launch(IntentSenderRequest.Builder(request.intentSender).build())
     } else {
         videos.forEach { video ->
@@ -1034,26 +1114,59 @@ fun requestDeleteVideos(
             } catch (_: Exception) {
             }
         }
+
         Toast.makeText(context, "Deleted", Toast.LENGTH_SHORT).show()
+        onDeletedWithoutSystemDialog()
     }
 }
 
 
-fun renameVideo(
+
+
+
+
+
+
+
+enum class RenameResult {
+    SUCCESS,
+    PERMISSION_REQUESTED,
+    FAILED
+}
+
+fun isVideoUriValid(context: Context, video: VideoItem): Boolean {
+    return try {
+        context.contentResolver.openAssetFileDescriptor(video.uri, "r")?.use {
+            true
+        } ?: false
+    } catch (_: Exception) {
+        false
+    }
+}
+
+fun buildCleanVideoName(
+    oldName: String,
+    newName: String
+): String {
+    val trimmed = newName.trim()
+    if (trimmed.isBlank()) return oldName
+
+    return if (trimmed.contains(".")) {
+        trimmed
+    } else {
+        val extension = oldName.substringAfterLast(".", "")
+        if (extension.isNotBlank()) "$trimmed.$extension" else trimmed
+    }
+}
+
+fun renameVideoFileDirect(
     context: Context,
     video: VideoItem,
     newName: String
 ): Boolean {
-    if (newName.isBlank()) return false
+    val cleanName = buildCleanVideoName(video.name, newName)
 
     return try {
-        val cleanName = if (newName.contains(".")) {
-            newName.trim()
-        } else {
-            val extension = video.name.substringAfterLast(".", "")
-            if (extension.isNotBlank()) "${newName.trim()}.$extension" else newName.trim()
-        }
-
         val values = ContentValues().apply {
             put(MediaStore.Video.Media.DISPLAY_NAME, cleanName)
         }
@@ -1071,8 +1184,71 @@ fun renameVideo(
     }
 }
 
+fun renameVideoFile(
+    context: Context,
+    video: VideoItem,
+    newName: String,
+    launcher: ActivityResultLauncher<IntentSenderRequest>,
+    rememberPending: () -> Unit
+): RenameResult {
+    val cleanName = buildCleanVideoName(video.name, newName)
+
+    return try {
+        val values = ContentValues().apply {
+            put(MediaStore.Video.Media.DISPLAY_NAME, cleanName)
+        }
+
+        val rows = context.contentResolver.update(
+            video.uri,
+            values,
+            null,
+            null
+        )
+
+        if (rows > 0) RenameResult.SUCCESS else RenameResult.FAILED
+    } catch (e: RecoverableSecurityException) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            rememberPending()
+            launcher.launch(
+                IntentSenderRequest.Builder(e.userAction.actionIntent.intentSender).build()
+            )
+            RenameResult.PERMISSION_REQUESTED
+        } else {
+            RenameResult.FAILED
+        }
+    } catch (_: SecurityException) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            try {
+                rememberPending()
+
+                val request = MediaStore.createWriteRequest(
+                    context.contentResolver,
+                    listOf(video.uri)
+                )
+
+                launcher.launch(
+                    IntentSenderRequest.Builder(request.intentSender).build()
+                )
+
+                RenameResult.PERMISSION_REQUESTED
+            } catch (_: Exception) {
+                RenameResult.FAILED
+            }
+        } else {
+            RenameResult.FAILED
+        }
+    } catch (_: Exception) {
+        RenameResult.FAILED
+    }
+}
+
 
 fun openVideoDirectly(context: Context, video: VideoItem) {
+    if (!isVideoUriValid(context, video)) {
+        Toast.makeText(context, "Video no longer exists", Toast.LENGTH_SHORT).show()
+        return
+    }
+
     val intent = Intent(Intent.ACTION_VIEW).apply {
         setDataAndType(video.uri, video.mimeType)
 
@@ -1097,6 +1273,8 @@ fun openVideoDirectly(context: Context, video: VideoItem) {
         context.startActivity(Intent.createChooser(intent, video.name))
     }
 }
+
+
 
 
 
