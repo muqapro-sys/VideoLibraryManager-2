@@ -223,8 +223,10 @@ fun VideoLibraryApp(viewModel: VideoLibraryViewModel) {
 
             Box(
                 modifier = Modifier
-                    .align(Alignment.TopCenter)
+                    .align(Alignment.BottomCenter)
                     .fillMaxWidth()
+                    .navigationBarsPadding()
+                    .padding(bottom = 12.dp)
             ) {
                 OneUiLargeHeader(
                     state = state,
@@ -364,12 +366,11 @@ fun OneUiLargeHeader(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .statusBarsPadding()
-            .padding(start = 14.dp, end = 14.dp, top = 8.dp, bottom = 4.dp)
+            .padding(start = 14.dp, end = 14.dp, top = 4.dp, bottom = 4.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.End,
+            horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(
