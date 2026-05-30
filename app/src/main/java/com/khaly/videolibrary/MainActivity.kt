@@ -153,7 +153,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun StatusBarGradientHaze() {
-    val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
+    val isDark = androidx.compose.foundation.isSystemInDarkTheme()
 
     val topColor = if (isDark) {
         androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.58f)
