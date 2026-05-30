@@ -2,7 +2,6 @@ package com.khaly.videolibrary
 
 import android.Manifest
 import android.content.Context
-import android.graphics.Color as AndroidColor
 import android.content.res.Configuration
 import android.content.ContentValues
 import android.content.ClipData
@@ -12,9 +11,9 @@ import android.content.pm.ResolveInfo
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.graphics.Color
 import android.util.Size
 import android.provider.Settings
-import android.view.WindowInsetsController
 import android.view.View
 import android.widget.Toast
 import android.provider.MediaStore
@@ -118,26 +117,8 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        window.statusBarColor = AndroidColor.TRANSPARENT
-        window.navigationBarColor = AndroidColor.TRANSPARENT
-
-        val isDarkMode = (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            val flags = if (isDarkMode) {
-                0
-            } else {
-                WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS or
-                    WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS
-            }
-
-            window.insetsController?.setSystemBarsAppearance(
-                flags,
-                WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS or
-                    WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS
-            )
-        } else {
+        applyTransparentSystemBarsSafely()
+} else {
             @Suppress("DEPRECATION")
             window.decorView.systemUiVisibility = if (isDarkMode) {
                 0
@@ -153,6 +134,30 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+
+    
+
+
+    private fun applyTransparentSystemBarsSafely() {
+        window.statusBarColor = Color.TRANSPARENT
+        window.navigationBarColor = Color.TRANSPARENT
+
+        window.decorView.post {
+            val isDarkMode =
+                (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) ==
+                    Configuration.UI_MODE_NIGHT_YES
+
+            @Suppress("DEPRECATION")
+            window.decorView.systemUiVisibility = if (isDarkMode) {
+                0
+            } else {
+                View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or
+                    View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
+            }
+        }
+    }
+
+}
 @Composable
 fun VideoLibraryApp(viewModel: VideoLibraryViewModel) {
     val context = LocalContext.current
