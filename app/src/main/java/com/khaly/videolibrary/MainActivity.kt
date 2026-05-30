@@ -182,7 +182,52 @@ fun VideoLibraryApp(viewModel: VideoLibraryViewModel) {
         color = MaterialTheme.colorScheme.background
     ) {
         Box(Modifier.fillMaxSize()) {
-            Column(Modifier.fillMaxSize()) {
+
+            // المحتوى يبدأ من أعلى الشاشة، لذلك لا توجد مساحة سوداء محجوزة للهيدر
+            Box(Modifier.fillMaxSize()) {
+                when {
+                    state.isLoading -> Box(
+                        Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+
+                    state.permissionDenied -> PermissionDeniedView(context)
+
+                    state.selectedTab == 1 -> FoldersScreen(
+                        folders = state.folders,
+                        onOpenFolder = { viewModel.openFolder(it.name) }
+                    )
+
+                    else -> VideosScreen(
+                        videos = state.filteredVideos,
+                        favorites = state.favorites,
+                        viewMode = state.viewMode,
+                        onOpen = { video ->
+                            if (isVideoUriValid(context, video)) {
+                                openVideoDirectly(context, video)
+                            } else {
+                                Toast.makeText(
+                                    context,
+                                    "Video no longer exists",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                viewModel.scanVideos()
+                            }
+                        },
+                        onFavorite = { viewModel.toggleFavorite(it.id) },
+                        onRefresh = viewModel::scanVideos
+                    )
+                }
+            }
+
+            // الهيدر العلوي أصبح عائمًا فوق المحتوى
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .fillMaxWidth()
+            ) {
                 OneUiLargeHeader(
                     state = state,
                     onQueryChanged = viewModel::setQuery,
@@ -194,45 +239,17 @@ fun VideoLibraryApp(viewModel: VideoLibraryViewModel) {
                     onSortChanged = viewModel::setSortMode,
                     onRefresh = viewModel::scanVideos
                 )
+            }
 
-                if (state.selectedFolder != null) {
-                    AssistChip(
-                        modifier = Modifier.padding(horizontal = 18.dp, vertical = 4.dp),
-                        onClick = viewModel::clearFolder,
-                        label = { Text("Folder: ${state.selectedFolder}  ×") }
-                    )
-                }
-
-                Box(Modifier.weight(1f)) {
-                    when {
-                        state.isLoading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            CircularProgressIndicator()
-                        }
-
-                        state.permissionDenied -> PermissionDeniedView(context)
-
-                        state.selectedTab == 1 -> FoldersScreen(
-                            folders = state.folders,
-                            onOpenFolder = { viewModel.openFolder(it.name) }
-                        )
-
-                        else -> VideosScreen(
-                            videos = state.filteredVideos,
-                            favorites = state.favorites,
-                            viewMode = state.viewMode,
-                            onOpen = { video ->
-                                if (isVideoUriValid(context, video)) {
-                                    openVideoDirectly(context, video)
-                                } else {
-                                    Toast.makeText(context, "Video no longer exists", Toast.LENGTH_SHORT).show()
-                                    viewModel.scanVideos()
-                                }
-                            },
-                            onFavorite = { viewModel.toggleFavorite(it.id) },
-                            onRefresh = viewModel::scanVideos
-                        )
-                    }
-                }
+            if (state.selectedFolder != null) {
+                AssistChip(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .statusBarsPadding()
+                        .padding(start = 18.dp, top = 70.dp),
+                    onClick = viewModel::clearFolder,
+                    label = { Text("Folder: ${state.selectedFolder}  ×") }
+                )
             }
 
             Box(
@@ -254,6 +271,8 @@ fun VideoLibraryApp(viewModel: VideoLibraryViewModel) {
 
 
 
+
+
 @Composable
 fun GlassIconButton(
     text: String,
@@ -264,12 +283,12 @@ fun GlassIconButton(
         onClick = onClick,
         modifier = modifier.size(48.dp),
         shape = RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.20f),
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.38f),
         tonalElevation = 0.dp,
         shadowElevation = 0.dp,
         border = BorderStroke(
             width = 1.dp,
-            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.18f)
+            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.22f)
         )
     ) {
         Box(
@@ -280,11 +299,13 @@ fun GlassIconButton(
                 text = text,
                 fontSize = 27.sp,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.95f)
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.96f)
             )
         }
     }
 }
+
+
 
 
 
@@ -311,30 +332,13 @@ fun OneUiLargeHeader(
         modifier = Modifier
             .fillMaxWidth()
             .statusBarsPadding()
-            .padding(start = 18.dp, end = 18.dp, top = 8.dp, bottom = 8.dp)
+            .padding(start = 14.dp, end = 14.dp, top = 8.dp, bottom = 4.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(Modifier.weight(1f)) {
-                Text(
-                    text = if (state.selectedTab == 1) "Folders" else "Video",
-                    fontSize = 32.sp,
-                    fontWeight = FontWeight.Light,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-
-                Text(
-                    text = if (state.selectedTab == 1)
-                        "${state.folders.size} Folders"
-                    else
-                        "${state.filteredVideos.size} Videos",
-                    fontSize = 14.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -359,41 +363,36 @@ fun OneUiLargeHeader(
         }
 
         if (searchActive) {
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(8.dp))
 
-            OutlinedTextField(
-                value = state.query,
-                onValueChange = onQueryChanged,
+            Surface(
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                shape = RoundedCornerShape(22.dp),
-                label = { Text("Search videos") },
-                placeholder = { Text("Type video name...") }
-            )
-        } else if (state.selectedTab == 0) {
-            Spacer(Modifier.height(10.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                FilterChip(
-                    selected = false,
-                    onClick = { },
-                    label = { Text("Large files") },
-                    leadingIcon = { Text("◇") }
+                shape = RoundedCornerShape(24.dp),
+                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.82f),
+                tonalElevation = 0.dp,
+                shadowElevation = 0.dp,
+                border = BorderStroke(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.18f)
                 )
-
-                FilterChip(
-                    selected = false,
-                    onClick = { },
-                    label = { Text("This week") },
-                    leadingIcon = { Text("◷") }
+            ) {
+                OutlinedTextField(
+                    value = state.query,
+                    onValueChange = onQueryChanged,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 4.dp),
+                    singleLine = true,
+                    shape = RoundedCornerShape(22.dp),
+                    label = { Text("Search videos") },
+                    placeholder = { Text("Type video name...") }
                 )
             }
         }
     }
 }
+
+
 
 
 
@@ -479,12 +478,12 @@ fun GlassSortButton(
             onClick = { expanded = true },
             modifier = Modifier.height(48.dp),
             shape = RoundedCornerShape(20.dp),
-            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.20f),
+            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.38f),
             tonalElevation = 0.dp,
             shadowElevation = 0.dp,
             border = BorderStroke(
                 width = 1.dp,
-                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.18f)
+                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.22f)
             )
         ) {
             Box(
@@ -495,7 +494,7 @@ fun GlassSortButton(
                     "Sort",
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.95f)
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.96f)
                 )
             }
         }
@@ -523,6 +522,8 @@ fun GlassSortButton(
         }
     }
 }
+
+
 
 
 
