@@ -366,8 +366,37 @@ fun OneUiLargeHeader(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 14.dp, end = 14.dp, top = 4.dp, bottom = 4.dp)
+            .padding(start = 14.dp, end = 14.dp, top = 4.dp, bottom = 4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        if (searchActive) {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 10.dp),
+                shape = RoundedCornerShape(24.dp),
+                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.38f),
+                tonalElevation = 0.dp,
+                shadowElevation = 0.dp,
+                border = BorderStroke(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.22f)
+                )
+            ) {
+                OutlinedTextField(
+                    value = state.query,
+                    onValueChange = onQueryChanged,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 6.dp),
+                    singleLine = true,
+                    shape = RoundedCornerShape(22.dp),
+                    label = { Text("Search videos") },
+                    placeholder = { Text("Type video name...") }
+                )
+            }
+        }
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center,
@@ -407,36 +436,10 @@ fun OneUiLargeHeader(
                 )
             }
         }
-
-        if (searchActive) {
-            Spacer(Modifier.height(8.dp))
-
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(24.dp),
-                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.82f),
-                tonalElevation = 0.dp,
-                shadowElevation = 0.dp,
-                border = BorderStroke(
-                    width = 1.dp,
-                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.18f)
-                )
-            ) {
-                OutlinedTextField(
-                    value = state.query,
-                    onValueChange = onQueryChanged,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 4.dp),
-                    singleLine = true,
-                    shape = RoundedCornerShape(22.dp),
-                    label = { Text("Search videos") },
-                    placeholder = { Text("Type video name...") }
-                )
-            }
-        }
     }
 }
+
+
 
 
 
@@ -924,35 +927,16 @@ fun VideosScreen(
         }
     }
 
-    Column {
-        if (selectedIds.isNotEmpty()) {
-            SelectionActionBar(
-                count = selectedIds.size,
-                canRename = selectedIds.size == 1,
-                onShare = { shareVideos(context, selectedVideos) },
-                onDelete = {
-                    requestDeleteVideos(
-                        context = context,
-                        videos = selectedVideos,
-                        launcher = deleteLauncher,
-                        onDeletedWithoutSystemDialog = {
-                            selectedIds = emptySet()
-                            onRefresh()
-                        }
-                    )
-                },
-                onRename = {
-                    if (selectedVideos.size == 1) {
-                        renameVideo = selectedVideos.first()
-                    }
-                }
-            )
-        }
-
+    Box(modifier = Modifier.fillMaxSize()) {
         if (viewMode == ViewMode.GRID) {
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
-                contentPadding = PaddingValues(start = 12.dp, end = 12.dp, top = 0.dp, bottom = 24.dp),
+                contentPadding = PaddingValues(
+                    start = 12.dp,
+                    end = 12.dp,
+                    top = 0.dp,
+                    bottom = if (selectedIds.isNotEmpty()) 152.dp else 88.dp
+                ),
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 verticalArrangement = Arrangement.spacedBy(18.dp)
             ) {
@@ -976,7 +960,12 @@ fun VideosScreen(
             }
         } else {
             LazyColumn(
-                contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 0.dp, bottom = 24.dp),
+                contentPadding = PaddingValues(
+                    start = 14.dp,
+                    end = 14.dp,
+                    top = 0.dp,
+                    bottom = if (selectedIds.isNotEmpty()) 152.dp else 88.dp
+                ),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 items(videos, key = { it.id }) { video ->
@@ -997,6 +986,34 @@ fun VideosScreen(
                     )
                 }
             }
+        }
+
+        if (selectedIds.isNotEmpty()) {
+            SelectionActionBar(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .navigationBarsPadding()
+                    .padding(start = 14.dp, end = 14.dp, bottom = 76.dp),
+                count = selectedIds.size,
+                canRename = selectedIds.size == 1,
+                onShare = { shareVideos(context, selectedVideos) },
+                onDelete = {
+                    requestDeleteVideos(
+                        context = context,
+                        videos = selectedVideos,
+                        launcher = deleteLauncher,
+                        onDeletedWithoutSystemDialog = {
+                            selectedIds = emptySet()
+                            onRefresh()
+                        }
+                    )
+                },
+                onRename = {
+                    if (selectedVideos.size == 1) {
+                        renameVideo = selectedVideos.first()
+                    }
+                }
+            )
         }
     }
 
@@ -1040,8 +1057,11 @@ fun VideosScreen(
 
 
 
+
+
 @Composable
 fun SelectionActionBar(
+    modifier: Modifier = Modifier,
     count: Int,
     canRename: Boolean,
     onShare: () -> Unit,
@@ -1049,25 +1069,27 @@ fun SelectionActionBar(
     onRename: () -> Unit
 ) {
     Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 8.dp),
+        modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.18f),
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.38f),
+        tonalElevation = 0.dp,
+        shadowElevation = 0.dp,
         border = BorderStroke(
             width = 1.dp,
-            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.18f)
+            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.22f)
         )
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
         ) {
             Text(
-                "$count selected",
-                modifier = Modifier.weight(1f),
+                "$count",
                 fontWeight = FontWeight.Bold,
-                fontSize = 16.sp
+                fontSize = 16.sp,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.96f),
+                modifier = Modifier.padding(end = 10.dp)
             )
 
             TextButton(onClick = onShare) {
@@ -1086,6 +1108,8 @@ fun SelectionActionBar(
         }
     }
 }
+
+
 
 
 
