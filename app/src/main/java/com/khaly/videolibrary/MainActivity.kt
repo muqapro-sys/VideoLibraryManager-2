@@ -117,8 +117,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        window.statusBarColor = android.graphics.Color.TRANSPARENT
-        window.navigationBarColor = android.graphics.Color.TRANSPARENT
+        applyDynamicSystemBars()
 
         setContent {
             OneUi85Theme {
@@ -126,6 +125,26 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    private fun applyDynamicSystemBars() {
+        window.statusBarColor = android.graphics.Color.TRANSPARENT
+        window.navigationBarColor = android.graphics.Color.TRANSPARENT
+
+        window.decorView.post {
+            val isDarkMode =
+                (resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) ==
+                    android.content.res.Configuration.UI_MODE_NIGHT_YES
+
+            @Suppress("DEPRECATION")
+            window.decorView.systemUiVisibility = if (isDarkMode) {
+                0
+            } else {
+                android.view.View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or
+                    android.view.View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
+            }
+        }
+    }
+
 }
 
 @Composable
