@@ -5,7 +5,7 @@
         android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
 
-    <application
+    <application android:roundIcon="@drawable/ic_launcher" android:icon="@drawable/ic_launcher"
         android:allowBackup="true"
         android:theme="@style/AppTheme"
         android:label="@string/app_name"
