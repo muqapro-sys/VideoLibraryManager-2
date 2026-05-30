@@ -5,50 +5,57 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
 
+    <!-- Back folder layer -->
     <path
-        android:fillColor="#111827"
-        android:pathData="M24,8 L84,8 Q100,8 100,24 L100,84 Q100,100 84,100 L24,100 Q8,100 8,84 L8,24 Q8,8 24,8 Z" />
+        android:fillColor="#5B21B6"
+        android:pathData="M17,22
+            Q17,14 25,14
+            L45,14
+            Q51,14 55,20
+            L64,33
+            L87,33
+            Q96,33 96,42
+            L96,82
+            Q96,94 84,94
+            L24,94
+            Q12,94 12,82
+            L12,31
+            Q12,22 17,22 Z" />
 
+    <!-- Light rear flap -->
     <path
-        android:fillColor="#2563EB"
-        android:fillAlpha="0.45"
-        android:pathData="M16,26 C28,8 58,2 84,18 C67,20 45,31 31,48 C20,62 15,78 18,94 C6,72 4,45 16,26 Z" />
-
-    <path
-        android:fillColor="#A855F7"
-        android:fillAlpha="0.35"
-        android:pathData="M91,84 C74,103 39,105 18,91 C42,84 64,70 78,47 C88,31 93,18 96,11 C106,38 107,67 91,84 Z" />
-
-    <path
-        android:fillColor="#FFFFFF"
-        android:fillAlpha="0.18"
-        android:pathData="M27,29 L72,29 Q80,29 80,37 L80,67 Q80,75 72,75 L27,75 Q19,75 19,67 L19,37 Q19,29 27,29 Z" />
-
-    <path
-        android:fillColor="#FFFFFF"
-        android:fillAlpha="0.34"
-        android:pathData="M35,36 L82,36 Q90,36 90,44 L90,76 Q90,84 82,84 L35,84 Q27,84 27,76 L27,44 Q27,36 35,36 Z" />
-
-    <path
-        android:fillColor="#0F172A"
+        android:fillColor="#C4B5FD"
         android:fillAlpha="0.72"
-        android:pathData="M35,45 L42,45 L42,52 L35,52 Z
-                          M35,57 L42,57 L42,64 L35,64 Z
-                          M35,69 L42,69 L42,76 L35,76 Z
-                          M75,45 L82,45 L82,52 L75,52 Z
-                          M75,57 L82,57 L82,64 L75,64 Z
-                          M75,69 L82,69 L82,76 L75,76 Z" />
+        android:pathData="M53,33
+            L88,33
+            Q96,33 96,42
+            L96,50
+            L57,50
+            Q52,50 49,46
+            L43,38
+            Q40,33 47,33 Z" />
 
+    <!-- Front folder body -->
     <path
-        android:fillColor="#DBEAFE"
-        android:pathData="M59,48 A13,13 0,1 1,58.9,48 Z" />
+        android:fillColor="#7C3AED"
+        android:pathData="M18,38
+            L88,38
+            Q98,38 98,48
+            L98,82
+            Q98,94 86,94
+            L22,94
+            Q10,94 10,82
+            L10,50
+            Q10,38 18,38 Z" />
 
-    <path
-        android:fillColor="#2563EB"
-        android:pathData="M56,54 L56,67 L68,60.5 Z" />
-
+    <!-- Play triangle -->
     <path
         android:fillColor="#FFFFFF"
-        android:fillAlpha="0.25"
-        android:pathData="M27,13 C49,7 73,11 89,25 C69,20 45,23 28,35 C17,43 12,56 10,70 C8,45 12,23 27,13 Z" />
+        android:pathData="M46,53
+            Q46,48 51,51
+            L70,63
+            Q75,66 70,69
+            L51,81
+            Q46,84 46,78
+            Z" />
 </vector>
