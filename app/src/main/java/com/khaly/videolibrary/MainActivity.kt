@@ -11,7 +11,6 @@ import android.content.pm.ResolveInfo
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.graphics.Color
 import android.util.Size
 import android.provider.Settings
 import android.view.View
@@ -117,15 +116,10 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        applyTransparentSystemBarsSafely()
-} else {
-            @Suppress("DEPRECATION")
-            window.decorView.systemUiVisibility = if (isDarkMode) {
-                0
-            } else {
-                View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
-            }
-        }
+
+        window.statusBarColor = android.graphics.Color.TRANSPARENT
+        window.navigationBarColor = android.graphics.Color.TRANSPARENT
+
         setContent {
             OneUi85Theme {
                 VideoLibraryApp(viewModel = viewModel)
@@ -134,30 +128,6 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-
-    
-
-
-    private fun applyTransparentSystemBarsSafely() {
-        window.statusBarColor = Color.TRANSPARENT
-        window.navigationBarColor = Color.TRANSPARENT
-
-        window.decorView.post {
-            val isDarkMode =
-                (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) ==
-                    Configuration.UI_MODE_NIGHT_YES
-
-            @Suppress("DEPRECATION")
-            window.decorView.systemUiVisibility = if (isDarkMode) {
-                0
-            } else {
-                View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or
-                    View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
-            }
-        }
-    }
-
-}
 @Composable
 fun VideoLibraryApp(viewModel: VideoLibraryViewModel) {
     val context = LocalContext.current
