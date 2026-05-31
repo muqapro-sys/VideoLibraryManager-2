@@ -897,7 +897,7 @@ fun OneUiVideoFolderIcon(
         Box(
             modifier = Modifier
                 .align(Alignment.TopStart)
-                .offset(x = 5.dp, y = 2.dp)
+                .padding(start = 5.dp, top = 2.dp)
                 .size(width = 64.dp, height = 48.dp)
                 .clip(RoundedCornerShape(14.dp))
                 .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.34f))
@@ -943,14 +943,12 @@ fun OneUiVideoFolderIcon(
 
         if (videoCount > 0) {
             Surface(
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .offset(x = 2.dp, y = 2.dp),
+                modifier = Modifier.align(Alignment.BottomEnd),
                 shape = RoundedCornerShape(12.dp),
                 color = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
                 border = BorderStroke(
-                    1.dp,
-                    MaterialTheme.colorScheme.outline.copy(alpha = 0.20f)
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.20f)
                 )
             ) {
                 Text(
@@ -964,6 +962,8 @@ fun OneUiVideoFolderIcon(
         }
     }
 }
+
+
 
 
 @Composable
