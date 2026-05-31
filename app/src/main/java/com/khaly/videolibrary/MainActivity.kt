@@ -271,7 +271,7 @@ fun VideoLibraryApp(viewModel: VideoLibraryViewModel) {
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .fillMaxWidth()
+                    .fillMaxSize()
                     .navigationBarsPadding()
                     .padding(bottom = 12.dp)
             ) {
@@ -412,87 +412,114 @@ fun OneUiLargeHeader(
     onTabSelect: (Int) -> Unit
 ) {
     var searchActive by remember { mutableStateOf(state.query.isNotBlank()) }
+    val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
+    val keyboardController = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
 
     BackHandler(enabled = searchActive) {
         searchActive = false
         onQueryChanged("")
+        focusManager.clearFocus()
+        keyboardController?.hide()
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = 14.dp, end = 14.dp, top = 4.dp, bottom = 4.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+    Box(
+        modifier = Modifier.fillMaxSize()
     ) {
         if (searchActive) {
-            Surface(
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 10.dp),
-                shape = RoundedCornerShape(24.dp),
-                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.38f),
-                tonalElevation = 0.dp,
-                shadowElevation = 0.dp,
-                border = BorderStroke(
-                    width = 1.dp,
-                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.22f)
-                )
-            ) {
-                OutlinedTextField(
-                    value = state.query,
-                    onValueChange = onQueryChanged,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 6.dp),
-                    singleLine = true,
-                    shape = RoundedCornerShape(22.dp),
-                    label = { Text("Search videos") },
-                    placeholder = { Text("Type video name...") }
-                )
-            }
+                    .fillMaxSize()
+                    .clickable(
+                        indication = null,
+                        interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+                    ) {
+                        searchActive = false
+                        onQueryChanged("")
+                        focusManager.clearFocus()
+                        keyboardController?.hide()
+                    }
+            )
         }
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .padding(start = 14.dp, end = 14.dp, top = 4.dp, bottom = 4.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            if (searchActive) {
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 10.dp),
+                    shape = RoundedCornerShape(24.dp),
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.38f),
+                    tonalElevation = 0.dp,
+                    shadowElevation = 0.dp,
+                    border = BorderStroke(
+                        width = 1.dp,
+                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.22f)
+                    )
+                ) {
+                    OutlinedTextField(
+                        value = state.query,
+                        onValueChange = onQueryChanged,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 6.dp),
+                        singleLine = true,
+                        shape = RoundedCornerShape(22.dp),
+                        label = { Text("Search videos") },
+                        placeholder = { Text("Type video name...") }
+                    )
+                }
+            }
+
             Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                GlassTopTabButton(
-                    text = "▦",
-                    selected = state.selectedTab == 0,
-                    onClick = { onTabSelect(0) }
-                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    GlassTopTabButton(
+                        text = "▦",
+                        selected = state.selectedTab == 0,
+                        onClick = { onTabSelect(0) }
+                    )
 
-                GlassTopTabButton(
-                    text = "▣",
-                    selected = state.selectedTab == 1,
-                    onClick = { onTabSelect(1) }
-                )
+                    GlassTopTabButton(
+                        text = "▣",
+                        selected = state.selectedTab == 1,
+                        onClick = { onTabSelect(1) }
+                    )
 
-                GlassIconButton(
-                    text = if (state.viewMode == ViewMode.GRID) "☷" else "▤",
-                    onClick = onToggleView
-                )
+                    GlassIconButton(
+                        text = if (state.viewMode == ViewMode.GRID) "☷" else "▤",
+                        onClick = onToggleView
+                    )
 
-                GlassIconButton(
-                    text = "⌕",
-                    onClick = {
-                        searchActive = true
-                    }
-                )
+                    GlassIconButton(
+                        text = "⌕",
+                        onClick = {
+                            searchActive = true
+                        }
+                    )
 
-                GlassSortButton(
-                    sortMode = state.sortMode,
-                    onSortChanged = onSortChanged
-                )
+                    GlassSortButton(
+                        sortMode = state.sortMode,
+                        onSortChanged = onSortChanged
+                    )
+                }
             }
         }
     }
 }
+
+
 
 
 
@@ -859,12 +886,93 @@ fun PermissionDeniedView(context: Context) {
 }
 
 @Composable
+fun OneUiVideoFolderIcon(
+    modifier: Modifier = Modifier,
+    videoCount: Int = 0
+) {
+    Box(
+        modifier = modifier
+            .size(width = 88.dp, height = 68.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .offset(x = 5.dp, y = 2.dp)
+                .size(width = 64.dp, height = 48.dp)
+                .clip(RoundedCornerShape(14.dp))
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.34f))
+        )
+
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .size(width = 82.dp, height = 52.dp)
+                .clip(RoundedCornerShape(18.dp))
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.82f))
+                .padding(8.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxSize(),
+                horizontalArrangement = Arrangement.spacedBy(5.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                repeat(3) { index ->
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .clip(RoundedCornerShape(7.dp))
+                            .background(
+                                when (index) {
+                                    0 -> MaterialTheme.colorScheme.surface.copy(alpha = 0.88f)
+                                    1 -> MaterialTheme.colorScheme.secondary.copy(alpha = 0.60f)
+                                    else -> MaterialTheme.colorScheme.tertiary.copy(alpha = 0.55f)
+                                }
+                            )
+                    ) {
+                        Text(
+                            text = "▶",
+                            modifier = Modifier.align(Alignment.Center),
+                            fontSize = 10.sp,
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
+                }
+            }
+        }
+
+        if (videoCount > 0) {
+            Surface(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .offset(x = 2.dp, y = 2.dp),
+                shape = RoundedCornerShape(12.dp),
+                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
+                border = BorderStroke(
+                    1.dp,
+                    MaterialTheme.colorScheme.outline.copy(alpha = 0.20f)
+                )
+            ) {
+                Text(
+                    text = videoCount.toString(),
+                    modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp),
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+        }
+    }
+}
+
+
+@Composable
 fun FoldersScreen(
     folders: List<VideoFolder>,
     onOpenFolder: (VideoFolder) -> Unit
 ) {
     if (folders.isEmpty()) {
-        EmptyView("No video folders found")
+        EmptyView("No folders found")
         return
     }
 
@@ -873,58 +981,60 @@ fun FoldersScreen(
             start = 14.dp,
             end = 14.dp,
             top = 0.dp,
-            bottom = 24.dp
+            bottom = 96.dp
         ),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(folders, key = { folder -> folder.name }) { folder ->
             Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onOpenFolder(folder) },
-                shape = RoundedCornerShape(22.dp),
-                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.10f),
+                onClick = { onOpenFolder(folder) },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(24.dp),
+                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.36f),
+                tonalElevation = 0.dp,
+                shadowElevation = 0.dp,
                 border = BorderStroke(
                     width = 1.dp,
-                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.12f)
+                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.18f)
                 )
             ) {
                 Row(
-                    modifier = Modifier.padding(16.dp),
+                    modifier = Modifier.padding(14.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "▣",
-                        fontSize = 30.sp,
-                        color = MaterialTheme.colorScheme.primary
+                    OneUiVideoFolderIcon(
+                        videoCount = folder.count
                     )
 
                     Spacer(Modifier.width(14.dp))
 
-                    Column(Modifier.weight(1f)) {
+                    Column(
+                        modifier = Modifier.weight(1f)
+                    ) {
                         Text(
                             text = folder.name,
-                            fontWeight = FontWeight.Bold,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1
                         )
+
+                        Spacer(Modifier.height(4.dp))
 
                         Text(
                             text = "${folder.count} videos • ${formatSize(folder.totalSizeBytes)}",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            fontSize = 13.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1
                         )
                     }
-
-                    Text(
-                        text = "›",
-                        fontSize = 28.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
                 }
             }
         }
     }
 }
+
+
 
 
 @Composable
@@ -1115,6 +1225,44 @@ fun VideosScreen(
 
 
 @Composable
+fun SelectionIconActionButton(
+    iconText: String,
+    enabled: Boolean = true,
+    onClick: () -> Unit
+) {
+    Surface(
+        onClick = {
+            if (enabled) onClick()
+        },
+        modifier = Modifier.size(48.dp),
+        shape = RoundedCornerShape(20.dp),
+        color = if (enabled)
+            MaterialTheme.colorScheme.surface.copy(alpha = 0.38f)
+        else
+            MaterialTheme.colorScheme.surface.copy(alpha = 0.16f),
+        tonalElevation = 0.dp,
+        shadowElevation = 0.dp,
+        border = BorderStroke(
+            1.dp,
+            MaterialTheme.colorScheme.outline.copy(alpha = if (enabled) 0.22f else 0.10f)
+        )
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = iconText,
+                fontSize = 23.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = if (enabled) 0.96f else 0.38f)
+            )
+        }
+    }
+}
+
+
+@Composable
 fun SelectionActionBar(
     modifier: Modifier = Modifier,
     count: Int,
@@ -1139,30 +1287,56 @@ fun SelectionActionBar(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
-            Text(
-                "$count",
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.96f),
-                modifier = Modifier.padding(end = 10.dp)
-            )
-
-            TextButton(onClick = onShare) {
-                Text("Share")
-            }
-
-            if (canRename) {
-                TextButton(onClick = onRename) {
-                    Text("Rename")
+            Surface(
+                modifier = Modifier.size(48.dp),
+                shape = RoundedCornerShape(20.dp),
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.22f),
+                tonalElevation = 0.dp,
+                shadowElevation = 0.dp,
+                border = BorderStroke(
+                    1.dp,
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.42f)
+                )
+            ) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = count.toString(),
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
                 }
             }
 
-            TextButton(onClick = onDelete) {
-                Text("Delete")
-            }
+            Spacer(Modifier.width(10.dp))
+
+            SelectionIconActionButton(
+                iconText = "↗",
+                onClick = onShare
+            )
+
+            Spacer(Modifier.width(8.dp))
+
+            SelectionIconActionButton(
+                iconText = "✎",
+                enabled = canRename,
+                onClick = onRename
+            )
+
+            Spacer(Modifier.width(8.dp))
+
+            SelectionIconActionButton(
+                iconText = "⌫",
+                onClick = onDelete
+            )
         }
     }
 }
+
+
 
 
 
