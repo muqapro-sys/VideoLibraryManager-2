@@ -920,7 +920,7 @@ fun OneUiVideoFolderIcon(
                     Box(
                         modifier = Modifier
                             .weight(1f)
-                            .fillMaxHeight()
+                            .height(36.dp)
                             .clip(RoundedCornerShape(7.dp))
                             .background(
                                 when (index) {
