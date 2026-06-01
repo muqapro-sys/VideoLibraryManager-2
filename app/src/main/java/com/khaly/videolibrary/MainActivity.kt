@@ -419,7 +419,6 @@ fun OneUiLargeHeader(
     var searchActive by remember { mutableStateOf(state.query.isNotBlank()) }
 
     val view = LocalView.current
-    val density = LocalDensity.current
     val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
     val keyboardController = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
     val searchFocusRequester = remember { FocusRequester() }
@@ -445,15 +444,7 @@ fun OneUiLargeHeader(
         }
     }
 
-    val keyboardHeightDp = with(density) {
-        keyboardHeightPx.toDp()
-    }
-
-    val searchBottomPadding = if (keyboardHeightPx > 0) {
-        keyboardHeightDp + 8.dp
-    } else {
-        76.dp
-    }
+    val keyboardVisible = keyboardHeightPx > 0
 
     fun closeSearch() {
         searchActive = false
@@ -488,16 +479,23 @@ fun OneUiLargeHeader(
 
             val searchShape = RoundedCornerShape(24.dp)
 
-            Surface(
-                modifier = Modifier
+            val searchModifier = if (keyboardVisible) {
+                Modifier
+                    .align(Alignment.TopCenter)
+                    .fillMaxWidth()
+                    .statusBarsPadding()
+                    .padding(start = 14.dp, end = 14.dp, top = 13.dp)
+                    .height(56.dp)
+            } else {
+                Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
-                    .padding(
-                        start = 14.dp,
-                        end = 14.dp,
-                        bottom = searchBottomPadding
-                    )
-                    .height(56.dp),
+                    .padding(start = 14.dp, end = 14.dp, bottom = 76.dp)
+                    .height(56.dp)
+            }
+
+            Surface(
+                modifier = searchModifier,
                 shape = searchShape,
                 color = MaterialTheme.colorScheme.surface.copy(alpha = 0.88f),
                 tonalElevation = 0.dp,
@@ -593,6 +591,8 @@ fun OneUiLargeHeader(
         }
     }
 }
+
+
 
 
 
