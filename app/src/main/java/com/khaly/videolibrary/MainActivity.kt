@@ -273,7 +273,6 @@ fun VideoLibraryApp(viewModel: VideoLibraryViewModel) {
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxSize()
-                    .imePadding()
                     .navigationBarsPadding()
                     .padding(bottom = 12.dp)
             ) {
@@ -441,116 +440,111 @@ fun OneUiLargeHeader(
                         keyboardController?.hide()
                     }
             )
+
+            val searchShape = RoundedCornerShape(24.dp)
+
+            Surface(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .imePadding()
+                    .padding(start = 14.dp, end = 14.dp, bottom = 19.dp)
+                    .height(50.dp),
+                shape = searchShape,
+                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.86f),
+                tonalElevation = 0.dp,
+                shadowElevation = 0.dp,
+                border = BorderStroke(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.28f)
+                )
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(searchShape)
+                        .padding(horizontal = 22.dp),
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    androidx.compose.foundation.text.BasicTextField(
+                        value = state.query,
+                        onValueChange = onQueryChanged,
+                        singleLine = true,
+                        textStyle = androidx.compose.material3.LocalTextStyle.current.copy(
+                            fontSize = 20.sp,
+                            color = MaterialTheme.colorScheme.onSurface
+                        ),
+                        cursorBrush = androidx.compose.ui.graphics.SolidColor(
+                            MaterialTheme.colorScheme.primary
+                        ),
+                        modifier = Modifier.fillMaxWidth(),
+                        decorationBox = { innerTextField ->
+                            Box(
+                                modifier = Modifier.fillMaxWidth(),
+                                contentAlignment = Alignment.CenterStart
+                            ) {
+                                if (state.query.isBlank()) {
+                                    Text(
+                                        text = "Type video name...",
+                                        fontSize = 20.sp,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f),
+                                        maxLines = 1
+                                    )
+                                }
+                                innerTextField()
+                            }
+                        }
+                    )
+                }
+            }
         }
 
-        Column(
+        Row(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                .padding(start = 14.dp, end = 14.dp, top = 4.dp, bottom = 4.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(start = 14.dp, end = 14.dp, bottom = 4.dp),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            if (searchActive) {
-                val searchShape = RoundedCornerShape(24.dp)
-
-                Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(58.dp)
-                        .padding(bottom = 8.dp),
-                    shape = searchShape,
-                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.86f),
-                    tonalElevation = 0.dp,
-                    shadowElevation = 0.dp,
-                    border = BorderStroke(
-                        width = 1.dp,
-                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.28f)
-                    )
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .clip(searchShape)
-                            .padding(horizontal = 22.dp),
-                        contentAlignment = Alignment.CenterStart
-                    ) {
-                        androidx.compose.foundation.text.BasicTextField(
-                            value = state.query,
-                            onValueChange = onQueryChanged,
-                            singleLine = true,
-                            textStyle = androidx.compose.material3.LocalTextStyle.current.copy(
-                                fontSize = 20.sp,
-                                color = MaterialTheme.colorScheme.onSurface
-                            ),
-                            cursorBrush = androidx.compose.ui.graphics.SolidColor(
-                                MaterialTheme.colorScheme.primary
-                            ),
-                            modifier = Modifier.fillMaxWidth(),
-                            decorationBox = { innerTextField ->
-                                Box(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    contentAlignment = Alignment.CenterStart
-                                ) {
-                                    if (state.query.isBlank()) {
-                                        Text(
-                                            text = "Type video name...",
-                                            fontSize = 20.sp,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f),
-                                            maxLines = 1
-                                        )
-                                    }
-                                    innerTextField()
-                                }
-                            }
-                        )
-                    }
-                }
-
-                Spacer(Modifier.height(2.dp))
-            }
-
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    GlassTopTabButton(
-                        text = "▦",
-                        selected = state.selectedTab == 0,
-                        onClick = { onTabSelect(0) }
-                    )
+                GlassTopTabButton(
+                    text = "▦",
+                    selected = state.selectedTab == 0,
+                    onClick = { onTabSelect(0) }
+                )
 
-                    GlassTopTabButton(
-                        text = "▣",
-                        selected = state.selectedTab == 1,
-                        onClick = { onTabSelect(1) }
-                    )
+                GlassTopTabButton(
+                    text = "▣",
+                    selected = state.selectedTab == 1,
+                    onClick = { onTabSelect(1) }
+                )
 
-                    GlassIconButton(
-                        text = if (state.viewMode == ViewMode.GRID) "☷" else "▤",
-                        onClick = onToggleView
-                    )
+                GlassIconButton(
+                    text = if (state.viewMode == ViewMode.GRID) "☷" else "▤",
+                    onClick = onToggleView
+                )
 
-                    GlassIconButton(
-                        text = "⌕",
-                        onClick = {
-                            searchActive = true
-                        }
-                    )
+                GlassIconButton(
+                    text = "⌕",
+                    onClick = {
+                        searchActive = true
+                    }
+                )
 
-                    GlassSortButton(
-                        sortMode = state.sortMode,
-                        onSortChanged = onSortChanged
-                    )
-                }
+                GlassSortButton(
+                    sortMode = state.sortMode,
+                    onSortChanged = onSortChanged
+                )
             }
         }
     }
 }
+
+
 
 
 
