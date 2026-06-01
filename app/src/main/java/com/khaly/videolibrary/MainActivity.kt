@@ -452,27 +452,33 @@ fun OneUiLargeHeader(
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .height(64.dp)
                         .padding(bottom = 10.dp),
                     shape = RoundedCornerShape(24.dp),
-                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.38f),
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.72f),
                     tonalElevation = 0.dp,
                     shadowElevation = 0.dp,
                     border = BorderStroke(
                         width = 1.dp,
-                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.22f)
+                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.26f)
                     )
                 ) {
-                    OutlinedTextField(
-                        value = state.query,
-                        onValueChange = onQueryChanged,
+                    Box(
                         modifier = Modifier
-                            .fillMaxWidth()
+                            .fillMaxSize()
                             .padding(horizontal = 6.dp),
-                        singleLine = true,
-                        shape = RoundedCornerShape(22.dp),
-                        label = { Text("Search videos") },
-                        placeholder = { Text("Type video name...") }
-                    )
+                        contentAlignment = Alignment.Center
+                    ) {
+                        OutlinedTextField(
+                            value = state.query,
+                            onValueChange = onQueryChanged,
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            shape = RoundedCornerShape(22.dp),
+                            label = { Text("Search videos") },
+                            placeholder = { Text("Type video name...") }
+                        )
+                    }
                 }
             }
 
@@ -518,6 +524,8 @@ fun OneUiLargeHeader(
         }
     }
 }
+
+
 
 
 
@@ -1234,17 +1242,17 @@ fun SelectionIconActionButton(
         onClick = {
             if (enabled) onClick()
         },
-        modifier = Modifier.size(48.dp),
-        shape = RoundedCornerShape(20.dp),
+        modifier = Modifier.size(44.dp),
+        shape = RoundedCornerShape(18.dp),
         color = if (enabled)
-            MaterialTheme.colorScheme.surface.copy(alpha = 0.38f)
+            MaterialTheme.colorScheme.surface.copy(alpha = 0.42f)
         else
-            MaterialTheme.colorScheme.surface.copy(alpha = 0.16f),
+            MaterialTheme.colorScheme.surface.copy(alpha = 0.18f),
         tonalElevation = 0.dp,
         shadowElevation = 0.dp,
         border = BorderStroke(
-            1.dp,
-            MaterialTheme.colorScheme.outline.copy(alpha = if (enabled) 0.22f else 0.10f)
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.outline.copy(alpha = if (enabled) 0.24f else 0.10f)
         )
     ) {
         Box(
@@ -1253,13 +1261,15 @@ fun SelectionIconActionButton(
         ) {
             Text(
                 text = iconText,
-                fontSize = 23.sp,
+                fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = if (enabled) 0.96f else 0.38f)
             )
         }
     }
 }
+
+
 
 
 @Composable
@@ -1272,69 +1282,79 @@ fun SelectionActionBar(
     onRename: () -> Unit
 ) {
     Surface(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .height(64.dp),
         shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.38f),
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.72f),
         tonalElevation = 0.dp,
         shadowElevation = 0.dp,
         border = BorderStroke(
             width = 1.dp,
-            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.22f)
+            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.26f)
         )
     ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 12.dp),
+            contentAlignment = Alignment.Center
         ) {
-            Surface(
-                modifier = Modifier.size(48.dp),
-                shape = RoundedCornerShape(20.dp),
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.22f),
-                tonalElevation = 0.dp,
-                shadowElevation = 0.dp,
-                border = BorderStroke(
-                    1.dp,
-                    MaterialTheme.colorScheme.primary.copy(alpha = 0.42f)
-                )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
             ) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = count.toString(),
-                        fontSize = 17.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
+                Surface(
+                    modifier = Modifier.size(44.dp),
+                    shape = RoundedCornerShape(18.dp),
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.24f),
+                    tonalElevation = 0.dp,
+                    shadowElevation = 0.dp,
+                    border = BorderStroke(
+                        width = 1.dp,
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.44f)
                     )
+                ) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = count.toString(),
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
                 }
+
+                Spacer(Modifier.width(10.dp))
+
+                SelectionIconActionButton(
+                    iconText = "↗",
+                    onClick = onShare
+                )
+
+                Spacer(Modifier.width(8.dp))
+
+                SelectionIconActionButton(
+                    iconText = "✎",
+                    enabled = canRename,
+                    onClick = onRename
+                )
+
+                Spacer(Modifier.width(8.dp))
+
+                SelectionIconActionButton(
+                    iconText = "⌫",
+                    onClick = onDelete
+                )
             }
-
-            Spacer(Modifier.width(10.dp))
-
-            SelectionIconActionButton(
-                iconText = "↗",
-                onClick = onShare
-            )
-
-            Spacer(Modifier.width(8.dp))
-
-            SelectionIconActionButton(
-                iconText = "✎",
-                enabled = canRename,
-                onClick = onRename
-            )
-
-            Spacer(Modifier.width(8.dp))
-
-            SelectionIconActionButton(
-                iconText = "⌫",
-                onClick = onDelete
-            )
         }
     }
 }
+
+
 
 
 
