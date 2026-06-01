@@ -476,7 +476,7 @@ fun OneUiLargeHeader(
                             value = state.query,
                             onValueChange = onQueryChanged,
                             singleLine = true,
-                            textStyle = LocalTextStyle.current.copy(
+                            textStyle = androidx.compose.material3.LocalTextStyle.current.copy(
                                 fontSize = 20.sp,
                                 color = MaterialTheme.colorScheme.onSurface
                             ),
