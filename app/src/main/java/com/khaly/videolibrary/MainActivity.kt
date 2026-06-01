@@ -449,37 +449,62 @@ fun OneUiLargeHeader(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             if (searchActive) {
+                val searchShape = RoundedCornerShape(24.dp)
+
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(64.dp)
-                        .padding(bottom = 10.dp),
-                    shape = RoundedCornerShape(24.dp),
-                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.72f),
+                        .height(58.dp)
+                        .padding(bottom = 8.dp),
+                    shape = searchShape,
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.86f),
                     tonalElevation = 0.dp,
                     shadowElevation = 0.dp,
                     border = BorderStroke(
                         width = 1.dp,
-                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.26f)
+                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.28f)
                     )
                 ) {
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(horizontal = 6.dp),
-                        contentAlignment = Alignment.Center
+                            .clip(searchShape)
+                            .padding(horizontal = 22.dp),
+                        contentAlignment = Alignment.CenterStart
                     ) {
-                        OutlinedTextField(
+                        androidx.compose.foundation.text.BasicTextField(
                             value = state.query,
                             onValueChange = onQueryChanged,
-                            modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
-                            shape = RoundedCornerShape(22.dp),
-                            label = { Text("Search videos") },
-                            placeholder = { Text("Type video name...") }
+                            textStyle = LocalTextStyle.current.copy(
+                                fontSize = 20.sp,
+                                color = MaterialTheme.colorScheme.onSurface
+                            ),
+                            cursorBrush = androidx.compose.ui.graphics.SolidColor(
+                                MaterialTheme.colorScheme.primary
+                            ),
+                            modifier = Modifier.fillMaxWidth(),
+                            decorationBox = { innerTextField ->
+                                Box(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    contentAlignment = Alignment.CenterStart
+                                ) {
+                                    if (state.query.isBlank()) {
+                                        Text(
+                                            text = "Type video name...",
+                                            fontSize = 20.sp,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f),
+                                            maxLines = 1
+                                        )
+                                    }
+                                    innerTextField()
+                                }
+                            }
                         )
                     }
                 }
+
+                Spacer(Modifier.height(2.dp))
             }
 
             Row(
@@ -524,6 +549,8 @@ fun OneUiLargeHeader(
         }
     }
 }
+
+
 
 
 
