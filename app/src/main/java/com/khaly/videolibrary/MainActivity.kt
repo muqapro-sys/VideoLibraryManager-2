@@ -112,6 +112,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 
 private const val PREFS_NAME = "video_library_prefs"
 private const val KEY_DEFAULT_PLAYER_PACKAGE = "default_video_player_package"
@@ -413,20 +415,27 @@ fun OneUiLargeHeader(
     onTabSelect: (Int) -> Unit
 ) {
     var searchActive by remember { mutableStateOf(state.query.isNotBlank()) }
+
     val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
     val keyboardController = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
+    val searchFocusRequester = remember { FocusRequester() }
 
-    BackHandler(enabled = searchActive) {
+    fun closeSearch() {
         searchActive = false
         onQueryChanged("")
         focusManager.clearFocus()
         keyboardController?.hide()
     }
 
+    BackHandler(enabled = searchActive) {
+        closeSearch()
+    }
+
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
         if (searchActive) {
+            // طبقة شفافة فقط لإغلاق البحث عند الضغط خارج الشريط
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -434,12 +443,14 @@ fun OneUiLargeHeader(
                         indication = null,
                         interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
                     ) {
-                        searchActive = false
-                        onQueryChanged("")
-                        focusManager.clearFocus()
-                        keyboardController?.hide()
+                        closeSearch()
                     }
             )
+
+            LaunchedEffect(Unit) {
+                searchFocusRequester.requestFocus()
+                keyboardController?.show()
+            }
 
             val searchShape = RoundedCornerShape(24.dp)
 
@@ -448,10 +459,10 @@ fun OneUiLargeHeader(
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
                     .imePadding()
-                    .padding(start = 14.dp, end = 14.dp, bottom = 19.dp)
-                    .height(50.dp),
+                    .padding(start = 14.dp, end = 14.dp, bottom = 8.dp)
+                    .height(56.dp),
                 shape = searchShape,
-                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.86f),
+                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.88f),
                 tonalElevation = 0.dp,
                 shadowElevation = 0.dp,
                 border = BorderStroke(
@@ -477,7 +488,9 @@ fun OneUiLargeHeader(
                         cursorBrush = androidx.compose.ui.graphics.SolidColor(
                             MaterialTheme.colorScheme.primary
                         ),
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .focusRequester(searchFocusRequester),
                         decorationBox = { innerTextField ->
                             Box(
                                 modifier = Modifier.fillMaxWidth(),
@@ -499,6 +512,7 @@ fun OneUiLargeHeader(
             }
         }
 
+        // الأيقونات السفلية ثابتة ولا تستعمل imePadding
         Row(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -543,6 +557,8 @@ fun OneUiLargeHeader(
         }
     }
 }
+
+
 
 
 
