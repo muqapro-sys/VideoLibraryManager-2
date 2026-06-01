@@ -114,6 +114,8 @@ import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.foundation.layout.WindowInsets
 
 private const val PREFS_NAME = "video_library_prefs"
 private const val KEY_DEFAULT_PLAYER_PACKAGE = "default_video_player_package"
@@ -416,9 +418,20 @@ fun OneUiLargeHeader(
 ) {
     var searchActive by remember { mutableStateOf(state.query.isNotBlank()) }
 
+    val density = LocalDensity.current
     val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
     val keyboardController = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
     val searchFocusRequester = remember { FocusRequester() }
+
+    val imeBottomDp = with(density) {
+        WindowInsets.ime.getBottom(this).toDp()
+    }
+
+    val searchBottomPadding = if (imeBottomDp > 0.dp) {
+        imeBottomDp + 8.dp
+    } else {
+        76.dp
+    }
 
     fun closeSearch() {
         searchActive = false
@@ -435,7 +448,6 @@ fun OneUiLargeHeader(
         modifier = Modifier.fillMaxSize()
     ) {
         if (searchActive) {
-            // طبقة شفافة فقط لإغلاق البحث عند الضغط خارج الشريط
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -447,7 +459,7 @@ fun OneUiLargeHeader(
                     }
             )
 
-            LaunchedEffect(Unit) {
+            LaunchedEffect(searchActive) {
                 searchFocusRequester.requestFocus()
                 keyboardController?.show()
             }
@@ -458,8 +470,11 @@ fun OneUiLargeHeader(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
-                    .imePadding()
-                    .padding(start = 14.dp, end = 14.dp, bottom = 8.dp)
+                    .padding(
+                        start = 14.dp,
+                        end = 14.dp,
+                        bottom = searchBottomPadding
+                    )
                     .height(56.dp),
                 shape = searchShape,
                 color = MaterialTheme.colorScheme.surface.copy(alpha = 0.88f),
@@ -512,7 +527,6 @@ fun OneUiLargeHeader(
             }
         }
 
-        // الأيقونات السفلية ثابتة ولا تستعمل imePadding
         Row(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -557,6 +571,8 @@ fun OneUiLargeHeader(
         }
     }
 }
+
+
 
 
 
