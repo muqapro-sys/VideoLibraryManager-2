@@ -419,15 +419,21 @@ fun OneUiLargeHeader(
     val keyboardController = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
     val searchFocusRequester = remember { FocusRequester() }
 
-    fun closeSearch() {
+    fun hideSearchBarOnly() {
+        searchActive = false
+        focusManager.clearFocus()
+        keyboardController?.hide()
+    }
+
+    fun clearSearchAndClose() {
         searchActive = false
         onQueryChanged("")
         focusManager.clearFocus()
         keyboardController?.hide()
     }
 
-    BackHandler(enabled = searchActive) {
-        closeSearch()
+    BackHandler(enabled = searchActive || state.query.isNotBlank()) {
+        clearSearchAndClose()
     }
 
     Box(
@@ -441,7 +447,8 @@ fun OneUiLargeHeader(
                         indication = null,
                         interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
                     ) {
-                        closeSearch()
+                        // مهم: نخفي الشريط فقط ولا نمسح نتائج البحث
+                        hideSearchBarOnly()
                     }
             )
 
@@ -557,6 +564,8 @@ fun OneUiLargeHeader(
         }
     }
 }
+
+
 
 
 
