@@ -113,9 +113,6 @@ import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalView
-import androidx.compose.runtime.DisposableEffect
 
 private const val PREFS_NAME = "video_library_prefs"
 private const val KEY_DEFAULT_PLAYER_PACKAGE = "default_video_player_package"
@@ -418,33 +415,9 @@ fun OneUiLargeHeader(
 ) {
     var searchActive by remember { mutableStateOf(state.query.isNotBlank()) }
 
-    val view = LocalView.current
     val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
     val keyboardController = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
     val searchFocusRequester = remember { FocusRequester() }
-
-    var keyboardHeightPx by remember { mutableStateOf(0) }
-
-    DisposableEffect(view) {
-        val listener = android.view.ViewTreeObserver.OnGlobalLayoutListener {
-            val rect = android.graphics.Rect()
-            view.getWindowVisibleDisplayFrame(rect)
-
-            val screenHeight = view.rootView.height
-            val visibleHeight = rect.height()
-            val diff = screenHeight - visibleHeight
-
-            keyboardHeightPx = if (diff > screenHeight * 0.15f) diff else 0
-        }
-
-        view.viewTreeObserver.addOnGlobalLayoutListener(listener)
-
-        onDispose {
-            view.viewTreeObserver.removeOnGlobalLayoutListener(listener)
-        }
-    }
-
-    val keyboardVisible = keyboardHeightPx > 0
 
     fun closeSearch() {
         searchActive = false
@@ -479,23 +452,16 @@ fun OneUiLargeHeader(
 
             val searchShape = RoundedCornerShape(24.dp)
 
-            val searchModifier = if (keyboardVisible) {
-                Modifier
+            Surface(
+                modifier = Modifier
                     .align(Alignment.TopCenter)
                     .fillMaxWidth()
-                    .statusBarsPadding()
-                    .padding(start = 14.dp, end = 14.dp, top = 13.dp)
-                    .height(56.dp)
-            } else {
-                Modifier
-                    .align(Alignment.BottomCenter)
-                    .fillMaxWidth()
-                    .padding(start = 14.dp, end = 14.dp, bottom = 76.dp)
-                    .height(56.dp)
-            }
-
-            Surface(
-                modifier = searchModifier,
+                    .padding(
+                        start = 14.dp,
+                        end = 14.dp,
+                        top = 42.dp
+                    )
+                    .height(56.dp),
                 shape = searchShape,
                 color = MaterialTheme.colorScheme.surface.copy(alpha = 0.88f),
                 tonalElevation = 0.dp,
@@ -591,6 +557,8 @@ fun OneUiLargeHeader(
         }
     }
 }
+
+
 
 
 
