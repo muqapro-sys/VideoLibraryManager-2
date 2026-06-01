@@ -44,7 +44,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -115,7 +114,8 @@ import java.util.concurrent.TimeUnit
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.runtime.DisposableEffect
 
 private const val PREFS_NAME = "video_library_prefs"
 private const val KEY_DEFAULT_PLAYER_PACKAGE = "default_video_player_package"
@@ -418,17 +418,39 @@ fun OneUiLargeHeader(
 ) {
     var searchActive by remember { mutableStateOf(state.query.isNotBlank()) }
 
+    val view = LocalView.current
     val density = LocalDensity.current
     val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
     val keyboardController = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
     val searchFocusRequester = remember { FocusRequester() }
 
-    val imeBottomDp = with(density) {
-        WindowInsets.ime.getBottom(this).toDp()
+    var keyboardHeightPx by remember { mutableStateOf(0) }
+
+    DisposableEffect(view) {
+        val listener = android.view.ViewTreeObserver.OnGlobalLayoutListener {
+            val rect = android.graphics.Rect()
+            view.getWindowVisibleDisplayFrame(rect)
+
+            val screenHeight = view.rootView.height
+            val visibleHeight = rect.height()
+            val diff = screenHeight - visibleHeight
+
+            keyboardHeightPx = if (diff > screenHeight * 0.15f) diff else 0
+        }
+
+        view.viewTreeObserver.addOnGlobalLayoutListener(listener)
+
+        onDispose {
+            view.viewTreeObserver.removeOnGlobalLayoutListener(listener)
+        }
     }
 
-    val searchBottomPadding = if (imeBottomDp > 0.dp) {
-        imeBottomDp + 8.dp
+    val keyboardHeightDp = with(density) {
+        keyboardHeightPx.toDp()
+    }
+
+    val searchBottomPadding = if (keyboardHeightPx > 0) {
+        keyboardHeightDp + 8.dp
     } else {
         76.dp
     }
@@ -571,6 +593,8 @@ fun OneUiLargeHeader(
         }
     }
 }
+
+
 
 
 
