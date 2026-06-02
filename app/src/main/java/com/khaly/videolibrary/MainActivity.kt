@@ -542,8 +542,13 @@ fun OneUiLargeHeader(
                 }
             }
         }
-
-        BottomBarGradientHaze()
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+        ) {
+            BottomBarGradientHaze()
+        }
 
         Row(
             modifier = Modifier
