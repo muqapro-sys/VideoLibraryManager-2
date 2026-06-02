@@ -1621,20 +1621,49 @@ fun OneUiLabeledBarButton(
     enabled: Boolean = true,
     onClick: () -> Unit
 ) {
+    var flashTick by remember { mutableStateOf(0) }
+    var flashing by remember { mutableStateOf(false) }
+
     val activeColor = MaterialTheme.colorScheme.primary
     val inactiveColor = MaterialTheme.colorScheme.onSurfaceVariant
     val disabledColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.34f)
 
-    val iconColor = when {
+    val baseIconColor = when {
         !enabled -> disabledColor
         selected -> activeColor
         else -> inactiveColor
     }
 
-    val textColor = when {
+    val baseTextColor = when {
         !enabled -> disabledColor
         selected -> activeColor
         else -> inactiveColor
+    }
+
+    val flashColor = MaterialTheme.colorScheme.primary
+
+    val animatedIconColor = androidx.compose.animation.animateColorAsState(
+        targetValue = if (flashing && enabled) flashColor else baseIconColor,
+        animationSpec = androidx.compose.animation.core.tween(
+            durationMillis = 130
+        ),
+        label = "iconFlashColor"
+    ).value
+
+    val animatedTextColor = androidx.compose.animation.animateColorAsState(
+        targetValue = if (flashing && enabled) flashColor else baseTextColor,
+        animationSpec = androidx.compose.animation.core.tween(
+            durationMillis = 130
+        ),
+        label = "textFlashColor"
+    ).value
+
+    LaunchedEffect(flashTick) {
+        if (flashTick > 0) {
+            flashing = true
+            kotlinx.coroutines.delay(170)
+            flashing = false
+        }
     }
 
     Box(
@@ -1648,6 +1677,7 @@ fun OneUiLabeledBarButton(
                     androidx.compose.foundation.interaction.MutableInteractionSource()
                 }
             ) {
+                flashTick += 1
                 onClick()
             },
         contentAlignment = Alignment.Center
@@ -1661,7 +1691,7 @@ fun OneUiLabeledBarButton(
         ) {
             OneUiLineIcon(
                 name = iconName,
-                color = iconColor,
+                color = animatedIconColor,
                 modifier = Modifier.size(25.dp)
             )
 
@@ -1670,12 +1700,14 @@ fun OneUiLabeledBarButton(
             Text(
                 text = label,
                 fontSize = 10.sp,
-                color = textColor,
+                color = animatedTextColor,
                 maxLines = 1
             )
         }
     }
 }
+
+
 
 
 
