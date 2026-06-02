@@ -544,14 +544,6 @@ fun OneUiLargeHeader(
                     }
                 )
 
-                GlassIconButton(
-                    text = "◇",
-                    onClick = {
-                        onTabSelect(1)
-                    }
-                )
-
-
                 GlassSortButton(
                     sortMode = state.sortMode,
                     onSortChanged = onSortChanged
