@@ -328,73 +328,57 @@ fun GlassTopTabButton(
     selected: Boolean,
     onClick: () -> Unit
 ) {
-    Surface(
-        onClick = onClick,
-        modifier = Modifier.size(48.dp),
-        shape = RoundedCornerShape(20.dp),
-        color = if (selected)
-            MaterialTheme.colorScheme.primary.copy(alpha = 0.28f)
-        else
-            MaterialTheme.colorScheme.surface.copy(alpha = 0.38f),
-        tonalElevation = 0.dp,
-        shadowElevation = 0.dp,
-        border = BorderStroke(
-            width = 1.dp,
-            color = if (selected)
-                MaterialTheme.colorScheme.primary.copy(alpha = 0.52f)
-            else
-                MaterialTheme.colorScheme.outline.copy(alpha = 0.22f)
-        )
-    ) {
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier.fillMaxSize()
-        ) {
-            Text(
-                text = text,
-                fontSize = 27.sp,
-                fontWeight = FontWeight.Bold,
-                color = if (selected)
-                    MaterialTheme.colorScheme.primary
-                else
-                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.96f)
-            )
-        }
+    val iconName = when (text) {
+        "▦" -> "videos"
+        "▣" -> "folders"
+        else -> "grid"
     }
+
+    val label = when (text) {
+        "▦" -> "Videos"
+        "▣" -> "Folders"
+        else -> "Tab"
+    }
+
+    OneUiLabeledBarButton(
+        iconName = iconName,
+        label = label,
+        selected = selected,
+        onClick = onClick
+    )
 }
+
+
 
 
 @Composable
 fun GlassIconButton(
     text: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    onClick: () -> Unit
 ) {
-    Surface(
-        onClick = onClick,
-        modifier = modifier.size(48.dp),
-        shape = RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.38f),
-        tonalElevation = 0.dp,
-        shadowElevation = 0.dp,
-        border = BorderStroke(
-            width = 1.dp,
-            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.22f)
-        )
-    ) {
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier.fillMaxSize()
-        ) {
-            Text(
-                text = text,
-                fontSize = 27.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.96f)
-            )
-        }
+    val iconName = when (text) {
+        "⌕" -> "search"
+        "☷" -> "list"
+        "▤" -> "grid"
+        else -> "more"
     }
+
+    val label = when (text) {
+        "⌕" -> "Search"
+        "☷" -> "List"
+        "▤" -> "Grid"
+        else -> "More"
+    }
+
+    OneUiLabeledBarButton(
+        iconName = iconName,
+        label = label,
+        selected = false,
+        onClick = onClick
+    )
 }
+
+
 
 
 
@@ -671,43 +655,22 @@ fun GlassSortButton(
     var expanded by remember { mutableStateOf(false) }
 
     Box {
-        Surface(
-            onClick = { expanded = true },
-            modifier = Modifier.height(48.dp),
-            shape = RoundedCornerShape(20.dp),
-            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.38f),
-            tonalElevation = 0.dp,
-            shadowElevation = 0.dp,
-            border = BorderStroke(
-                width = 1.dp,
-                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.22f)
-            )
-        ) {
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier.padding(horizontal = 16.dp)
-            ) {
-                Text(
-                    "Sort",
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.96f)
-                )
-            }
-        }
+        OneUiLabeledBarButton(
+            iconName = "sort",
+            label = "Sort",
+            selected = false,
+            onClick = { expanded = true }
+        )
 
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false }
         ) {
-            SortMode.entries.forEach { mode ->
+            SortMode.values().forEach { mode ->
                 DropdownMenuItem(
                     text = {
                         Text(
-                            mode.name
-                                .replace("_", " ")
-                                .lowercase()
-                                .replaceFirstChar { it.uppercase() }
+                            text = mode.name.lowercase().replaceFirstChar { it.uppercase() }
                         )
                     },
                     onClick = {
@@ -719,6 +682,8 @@ fun GlassSortButton(
         }
     }
 }
+
+
 
 
 
@@ -1385,194 +1350,288 @@ fun VideosScreen(
 
 
 @Composable
+fun OneUiLineIcon(
+    name: String,
+    modifier: Modifier = Modifier,
+    color: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.onSurfaceVariant
+) {
+    androidx.compose.foundation.Canvas(
+        modifier = modifier.size(34.dp)
+    ) {
+        val w = size.width
+        val h = size.height
+        val stroke = w * 0.078f
+
+        fun p(x: Float, y: Float) = androidx.compose.ui.geometry.Offset(w * x, h * y)
+
+        val outline = androidx.compose.ui.graphics.drawscope.Stroke(
+            width = stroke,
+            cap = androidx.compose.ui.graphics.StrokeCap.Round,
+            join = androidx.compose.ui.graphics.StrokeJoin.Round
+        )
+
+        when (name) {
+            "move" -> {
+                val folder = androidx.compose.ui.graphics.Path().apply {
+                    moveTo(w * 0.16f, h * 0.34f)
+                    quadraticBezierTo(w * 0.16f, h * 0.23f, w * 0.27f, h * 0.23f)
+                    lineTo(w * 0.43f, h * 0.23f)
+                    quadraticBezierTo(w * 0.50f, h * 0.23f, w * 0.55f, h * 0.31f)
+                    lineTo(w * 0.62f, h * 0.39f)
+                    lineTo(w * 0.76f, h * 0.39f)
+                    quadraticBezierTo(w * 0.86f, h * 0.39f, w * 0.86f, h * 0.49f)
+                    lineTo(w * 0.86f, h * 0.76f)
+                    quadraticBezierTo(w * 0.86f, h * 0.86f, w * 0.76f, h * 0.86f)
+                    lineTo(w * 0.27f, h * 0.86f)
+                    quadraticBezierTo(w * 0.16f, h * 0.86f, w * 0.16f, h * 0.76f)
+                    close()
+                }
+                drawPath(folder, color, style = outline)
+
+                drawLine(color, p(0.39f, 0.58f), p(0.67f, 0.58f), strokeWidth = stroke, cap = androidx.compose.ui.graphics.StrokeCap.Round)
+                drawLine(color, p(0.57f, 0.47f), p(0.68f, 0.58f), strokeWidth = stroke, cap = androidx.compose.ui.graphics.StrokeCap.Round)
+                drawLine(color, p(0.57f, 0.69f), p(0.68f, 0.58f), strokeWidth = stroke, cap = androidx.compose.ui.graphics.StrokeCap.Round)
+            }
+
+            "copy" -> {
+                val back = androidx.compose.ui.graphics.Path().apply {
+                    moveTo(w * 0.36f, h * 0.15f)
+                    lineTo(w * 0.72f, h * 0.15f)
+                    quadraticBezierTo(w * 0.84f, h * 0.15f, w * 0.84f, h * 0.27f)
+                    lineTo(w * 0.84f, h * 0.64f)
+                }
+                drawPath(back, color.copy(alpha = 0.70f), style = outline)
+
+                val front = androidx.compose.ui.graphics.Path().apply {
+                    moveTo(w * 0.18f, h * 0.32f)
+                    quadraticBezierTo(w * 0.18f, h * 0.20f, w * 0.30f, h * 0.20f)
+                    lineTo(w * 0.58f, h * 0.20f)
+                    quadraticBezierTo(w * 0.70f, h * 0.20f, w * 0.70f, h * 0.32f)
+                    lineTo(w * 0.70f, h * 0.74f)
+                    quadraticBezierTo(w * 0.70f, h * 0.86f, w * 0.58f, h * 0.86f)
+                    lineTo(w * 0.30f, h * 0.86f)
+                    quadraticBezierTo(w * 0.18f, h * 0.86f, w * 0.18f, h * 0.74f)
+                    close()
+                }
+                drawPath(front, color, style = outline)
+            }
+
+            "share" -> {
+                val a = p(0.28f, 0.52f)
+                val b = p(0.70f, 0.28f)
+                val c = p(0.70f, 0.76f)
+
+                drawLine(color, a, b, strokeWidth = stroke, cap = androidx.compose.ui.graphics.StrokeCap.Round)
+                drawLine(color, a, c, strokeWidth = stroke, cap = androidx.compose.ui.graphics.StrokeCap.Round)
+
+                drawCircle(color, radius = w * 0.105f, center = a, style = outline)
+                drawCircle(color, radius = w * 0.105f, center = b, style = outline)
+                drawCircle(color, radius = w * 0.105f, center = c, style = outline)
+            }
+
+            "delete" -> {
+                drawLine(color, p(0.27f, 0.31f), p(0.73f, 0.31f), strokeWidth = stroke, cap = androidx.compose.ui.graphics.StrokeCap.Round)
+                drawLine(color, p(0.42f, 0.19f), p(0.58f, 0.19f), strokeWidth = stroke, cap = androidx.compose.ui.graphics.StrokeCap.Round)
+
+                val bin = androidx.compose.ui.graphics.Path().apply {
+                    moveTo(w * 0.34f, h * 0.38f)
+                    lineTo(w * 0.38f, h * 0.80f)
+                    quadraticBezierTo(w * 0.39f, h * 0.88f, w * 0.47f, h * 0.88f)
+                    lineTo(w * 0.63f, h * 0.88f)
+                    quadraticBezierTo(w * 0.71f, h * 0.88f, w * 0.72f, h * 0.80f)
+                    lineTo(w * 0.76f, h * 0.38f)
+                }
+                drawPath(bin, color, style = outline)
+
+                drawLine(color.copy(alpha = 0.78f), p(0.47f, 0.50f), p(0.47f, 0.73f), strokeWidth = stroke * 0.72f, cap = androidx.compose.ui.graphics.StrokeCap.Round)
+                drawLine(color.copy(alpha = 0.78f), p(0.59f, 0.50f), p(0.59f, 0.73f), strokeWidth = stroke * 0.72f, cap = androidx.compose.ui.graphics.StrokeCap.Round)
+            }
+
+            "more" -> {
+                drawCircle(color, radius = w * 0.055f, center = p(0.50f, 0.25f))
+                drawCircle(color, radius = w * 0.055f, center = p(0.50f, 0.50f))
+                drawCircle(color, radius = w * 0.055f, center = p(0.50f, 0.75f))
+            }
+
+            "rename" -> {
+                drawLine(color, p(0.29f, 0.72f), p(0.70f, 0.31f), strokeWidth = stroke * 1.20f, cap = androidx.compose.ui.graphics.StrokeCap.Round)
+                drawLine(color, p(0.62f, 0.23f), p(0.78f, 0.39f), strokeWidth = stroke, cap = androidx.compose.ui.graphics.StrokeCap.Round)
+                drawLine(color.copy(alpha = 0.76f), p(0.23f, 0.84f), p(0.78f, 0.84f), strokeWidth = stroke, cap = androidx.compose.ui.graphics.StrokeCap.Round)
+            }
+
+            "search" -> {
+                drawCircle(color, radius = w * 0.22f, center = p(0.43f, 0.42f), style = outline)
+                drawLine(color, p(0.59f, 0.59f), p(0.78f, 0.78f), strokeWidth = stroke, cap = androidx.compose.ui.graphics.StrokeCap.Round)
+            }
+
+            "videos" -> {
+                val frame = androidx.compose.ui.graphics.Path().apply {
+                    moveTo(w * 0.20f, h * 0.26f)
+                    quadraticBezierTo(w * 0.20f, h * 0.18f, w * 0.28f, h * 0.18f)
+                    lineTo(w * 0.72f, h * 0.18f)
+                    quadraticBezierTo(w * 0.80f, h * 0.18f, w * 0.80f, h * 0.26f)
+                    lineTo(w * 0.80f, h * 0.74f)
+                    quadraticBezierTo(w * 0.80f, h * 0.82f, w * 0.72f, h * 0.82f)
+                    lineTo(w * 0.28f, h * 0.82f)
+                    quadraticBezierTo(w * 0.20f, h * 0.82f, w * 0.20f, h * 0.74f)
+                    close()
+                }
+                drawPath(frame, color, style = outline)
+
+                val play = androidx.compose.ui.graphics.Path().apply {
+                    moveTo(w * 0.44f, h * 0.38f)
+                    lineTo(w * 0.44f, h * 0.64f)
+                    lineTo(w * 0.64f, h * 0.51f)
+                    close()
+                }
+                drawPath(play, color)
+            }
+
+            "folders" -> {
+                val folder = androidx.compose.ui.graphics.Path().apply {
+                    moveTo(w * 0.16f, h * 0.34f)
+                    quadraticBezierTo(w * 0.16f, h * 0.23f, w * 0.27f, h * 0.23f)
+                    lineTo(w * 0.43f, h * 0.23f)
+                    quadraticBezierTo(w * 0.50f, h * 0.23f, w * 0.55f, h * 0.31f)
+                    lineTo(w * 0.62f, h * 0.39f)
+                    lineTo(w * 0.76f, h * 0.39f)
+                    quadraticBezierTo(w * 0.86f, h * 0.39f, w * 0.86f, h * 0.49f)
+                    lineTo(w * 0.86f, h * 0.76f)
+                    quadraticBezierTo(w * 0.86f, h * 0.86f, w * 0.76f, h * 0.86f)
+                    lineTo(w * 0.27f, h * 0.86f)
+                    quadraticBezierTo(w * 0.16f, h * 0.86f, w * 0.16f, h * 0.76f)
+                    close()
+                }
+                drawPath(folder, color, style = outline)
+            }
+
+            "grid" -> {
+                repeat(2) { row ->
+                    repeat(2) { col ->
+                        val left = w * (0.25f + col * 0.29f)
+                        val top = h * (0.25f + row * 0.29f)
+                        drawRoundRect(
+                            color = color,
+                            topLeft = androidx.compose.ui.geometry.Offset(left, top),
+                            size = androidx.compose.ui.geometry.Size(w * 0.17f, h * 0.17f),
+                            cornerRadius = androidx.compose.ui.geometry.CornerRadius(w * 0.045f, w * 0.045f),
+                            style = outline
+                        )
+                    }
+                }
+            }
+
+            "list" -> {
+                repeat(3) { i ->
+                    val y = 0.30f + i * 0.20f
+                    drawLine(color, p(0.24f, y), p(0.76f, y), strokeWidth = stroke, cap = androidx.compose.ui.graphics.StrokeCap.Round)
+                }
+            }
+
+            "sort" -> {
+                drawLine(color, p(0.26f, 0.28f), p(0.74f, 0.28f), strokeWidth = stroke, cap = androidx.compose.ui.graphics.StrokeCap.Round)
+                drawLine(color, p(0.26f, 0.50f), p(0.62f, 0.50f), strokeWidth = stroke, cap = androidx.compose.ui.graphics.StrokeCap.Round)
+                drawLine(color, p(0.26f, 0.72f), p(0.50f, 0.72f), strokeWidth = stroke, cap = androidx.compose.ui.graphics.StrokeCap.Round)
+            }
+
+            else -> {
+                drawCircle(color, radius = w * 0.07f, center = p(0.50f, 0.50f))
+            }
+        }
+    }
+}
+
+@Composable
+fun OneUiLabeledBarButton(
+    iconName: String,
+    label: String,
+    selected: Boolean = false,
+    enabled: Boolean = true,
+    onClick: () -> Unit
+) {
+    val activeColor = MaterialTheme.colorScheme.primary
+    val inactiveColor = MaterialTheme.colorScheme.onSurfaceVariant
+    val disabledColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.34f)
+
+    val iconColor = when {
+        !enabled -> disabledColor
+        selected -> activeColor
+        else -> inactiveColor
+    }
+
+    val textColor = when {
+        !enabled -> disabledColor
+        selected -> activeColor
+        else -> inactiveColor
+    }
+
+    Surface(
+        onClick = { if (enabled) onClick() },
+        modifier = Modifier
+            .width(82.dp)
+            .height(76.dp),
+        shape = RoundedCornerShape(22.dp),
+        color = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
+                else androidx.compose.ui.graphics.Color.Transparent,
+        tonalElevation = 0.dp,
+        shadowElevation = 0.dp
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = 8.dp, bottom = 6.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            OneUiLineIcon(
+                name = iconName,
+                color = iconColor,
+                modifier = Modifier.size(34.dp)
+            )
+
+            Spacer(Modifier.height(5.dp))
+
+            Text(
+                text = label,
+                fontSize = 13.sp,
+                color = textColor,
+                maxLines = 1
+            )
+        }
+    }
+}
+
+
+@Composable
 fun SelectionIconActionButton(
     iconText: String,
     enabled: Boolean = true,
     onClick: () -> Unit
 ) {
-    val iconColor = MaterialTheme.colorScheme.onSurface.copy(
-        alpha = if (enabled) 0.94f else 0.34f
+    val iconName = when (iconText) {
+        "↗" -> "share"
+        "✎" -> "rename"
+        "⌫" -> "delete"
+        else -> "more"
+    }
+
+    val label = when (iconText) {
+        "↗" -> "Share"
+        "✎" -> "Rename"
+        "⌫" -> "Delete"
+        else -> "More"
+    }
+
+    OneUiLabeledBarButton(
+        iconName = iconName,
+        label = label,
+        selected = false,
+        enabled = enabled,
+        onClick = onClick
     )
-
-    val buttonColor = if (enabled) {
-        MaterialTheme.colorScheme.surface.copy(alpha = 0.46f)
-    } else {
-        MaterialTheme.colorScheme.surface.copy(alpha = 0.18f)
-    }
-
-    Surface(
-        onClick = {
-            if (enabled) onClick()
-        },
-        modifier = Modifier.size(44.dp),
-        shape = RoundedCornerShape(18.dp),
-        color = buttonColor,
-        tonalElevation = 0.dp,
-        shadowElevation = 0.dp,
-        border = BorderStroke(
-            width = 1.dp,
-            color = MaterialTheme.colorScheme.outline.copy(
-                alpha = if (enabled) 0.24f else 0.10f
-            )
-        )
-    ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            androidx.compose.foundation.Canvas(
-                modifier = Modifier
-                    .size(25.dp)
-                    .padding(1.dp)
-            ) {
-                val w = size.width
-                val h = size.height
-                val stroke = w * 0.085f
-
-                when (iconText) {
-                    "↗" -> {
-                        // One UI style share icon: three soft nodes connected
-                        val p1 = androidx.compose.ui.geometry.Offset(w * 0.28f, h * 0.50f)
-                        val p2 = androidx.compose.ui.geometry.Offset(w * 0.70f, h * 0.28f)
-                        val p3 = androidx.compose.ui.geometry.Offset(w * 0.70f, h * 0.72f)
-
-                        drawLine(
-                            color = iconColor,
-                            start = p1,
-                            end = p2,
-                            strokeWidth = stroke,
-                            cap = androidx.compose.ui.graphics.StrokeCap.Round
-                        )
-
-                        drawLine(
-                            color = iconColor,
-                            start = p1,
-                            end = p3,
-                            strokeWidth = stroke,
-                            cap = androidx.compose.ui.graphics.StrokeCap.Round
-                        )
-
-                        drawCircle(
-                            color = iconColor,
-                            radius = w * 0.115f,
-                            center = p1
-                        )
-
-                        drawCircle(
-                            color = iconColor,
-                            radius = w * 0.115f,
-                            center = p2
-                        )
-
-                        drawCircle(
-                            color = iconColor,
-                            radius = w * 0.115f,
-                            center = p3
-                        )
-                    }
-
-                    "✎" -> {
-                        // One UI style edit icon: rounded pencil
-                        drawLine(
-                            color = iconColor,
-                            start = androidx.compose.ui.geometry.Offset(w * 0.30f, h * 0.72f),
-                            end = androidx.compose.ui.geometry.Offset(w * 0.70f, h * 0.32f),
-                            strokeWidth = stroke * 1.35f,
-                            cap = androidx.compose.ui.graphics.StrokeCap.Round
-                        )
-
-                        drawLine(
-                            color = iconColor,
-                            start = androidx.compose.ui.geometry.Offset(w * 0.62f, h * 0.24f),
-                            end = androidx.compose.ui.geometry.Offset(w * 0.77f, h * 0.39f),
-                            strokeWidth = stroke * 1.15f,
-                            cap = androidx.compose.ui.graphics.StrokeCap.Round
-                        )
-
-                        drawLine(
-                            color = iconColor,
-                            start = androidx.compose.ui.geometry.Offset(w * 0.24f, h * 0.78f),
-                            end = androidx.compose.ui.geometry.Offset(w * 0.44f, h * 0.73f),
-                            strokeWidth = stroke,
-                            cap = androidx.compose.ui.graphics.StrokeCap.Round
-                        )
-
-                        drawLine(
-                            color = iconColor.copy(alpha = 0.72f),
-                            start = androidx.compose.ui.geometry.Offset(w * 0.22f, h * 0.86f),
-                            end = androidx.compose.ui.geometry.Offset(w * 0.78f, h * 0.86f),
-                            strokeWidth = stroke,
-                            cap = androidx.compose.ui.graphics.StrokeCap.Round
-                        )
-                    }
-
-                    "⌫" -> {
-                        // One UI style delete icon: rounded trash bin
-                        drawLine(
-                            color = iconColor,
-                            start = androidx.compose.ui.geometry.Offset(w * 0.30f, h * 0.34f),
-                            end = androidx.compose.ui.geometry.Offset(w * 0.70f, h * 0.34f),
-                            strokeWidth = stroke,
-                            cap = androidx.compose.ui.graphics.StrokeCap.Round
-                        )
-
-                        drawLine(
-                            color = iconColor,
-                            start = androidx.compose.ui.geometry.Offset(w * 0.42f, h * 0.24f),
-                            end = androidx.compose.ui.geometry.Offset(w * 0.58f, h * 0.24f),
-                            strokeWidth = stroke,
-                            cap = androidx.compose.ui.graphics.StrokeCap.Round
-                        )
-
-                        val path = androidx.compose.ui.graphics.Path().apply {
-                            moveTo(w * 0.34f, h * 0.40f)
-                            lineTo(w * 0.38f, h * 0.78f)
-                            quadraticBezierTo(w * 0.39f, h * 0.86f, w * 0.47f, h * 0.86f)
-                            lineTo(w * 0.63f, h * 0.86f)
-                            quadraticBezierTo(w * 0.71f, h * 0.86f, w * 0.72f, h * 0.78f)
-                            lineTo(w * 0.76f, h * 0.40f)
-                        }
-
-                        drawPath(
-                            path = path,
-                            color = iconColor,
-                            style = androidx.compose.ui.graphics.drawscope.Stroke(
-                                width = stroke,
-                                cap = androidx.compose.ui.graphics.StrokeCap.Round,
-                                join = androidx.compose.ui.graphics.StrokeJoin.Round
-                            )
-                        )
-
-                        drawLine(
-                            color = iconColor.copy(alpha = 0.78f),
-                            start = androidx.compose.ui.geometry.Offset(w * 0.47f, h * 0.49f),
-                            end = androidx.compose.ui.geometry.Offset(w * 0.47f, h * 0.74f),
-                            strokeWidth = stroke * 0.75f,
-                            cap = androidx.compose.ui.graphics.StrokeCap.Round
-                        )
-
-                        drawLine(
-                            color = iconColor.copy(alpha = 0.78f),
-                            start = androidx.compose.ui.geometry.Offset(w * 0.61f, h * 0.49f),
-                            end = androidx.compose.ui.geometry.Offset(w * 0.61f, h * 0.74f),
-                            strokeWidth = stroke * 0.75f,
-                            cap = androidx.compose.ui.graphics.StrokeCap.Round
-                        )
-                    }
-
-                    else -> {
-                        // fallback modern dot icon
-                        drawCircle(
-                            color = iconColor,
-                            radius = w * 0.12f,
-                            center = androidx.compose.ui.geometry.Offset(w * 0.50f, h * 0.50f)
-                        )
-                    }
-                }
-            }
-        }
-    }
 }
+
+
 
 
 
@@ -1591,75 +1650,60 @@ fun SelectionActionBar(
     Surface(
         modifier = modifier
             .fillMaxWidth()
-            .height(64.dp),
-        shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.72f),
+            .height(104.dp),
+        shape = RoundedCornerShape(38.dp),
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.88f),
         tonalElevation = 0.dp,
         shadowElevation = 0.dp,
         border = BorderStroke(
             width = 1.dp,
-            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.26f)
+            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.10f)
         )
     ) {
-        Box(
+        Row(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 12.dp),
-            contentAlignment = Alignment.Center
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Surface(
-                    modifier = Modifier.size(44.dp),
-                    shape = RoundedCornerShape(18.dp),
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.24f),
-                    tonalElevation = 0.dp,
-                    shadowElevation = 0.dp,
-                    border = BorderStroke(
-                        width = 1.dp,
-                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.44f)
-                    )
-                ) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = count.toString(),
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                }
+            OneUiLabeledBarButton(
+                iconName = "move",
+                label = "Move",
+                selected = false,
+                onClick = { }
+            )
 
-                Spacer(Modifier.width(10.dp))
+            OneUiLabeledBarButton(
+                iconName = "copy",
+                label = "Copy",
+                selected = false,
+                onClick = { }
+            )
 
-                SelectionIconActionButton(
-                    iconText = "↗",
-                    onClick = onShare
-                )
+            SelectionIconActionButton(
+                iconText = "↗",
+                enabled = true,
+                onClick = onShare
+            )
 
-                Spacer(Modifier.width(8.dp))
+            SelectionIconActionButton(
+                iconText = "⌫",
+                enabled = true,
+                onClick = onDelete
+            )
 
-                SelectionIconActionButton(
-                    iconText = "✎",
-                    enabled = canRename,
-                    onClick = onRename
-                )
-
-                Spacer(Modifier.width(8.dp))
-
-                SelectionIconActionButton(
-                    iconText = "⌫",
-                    onClick = onDelete
-                )
-            }
+            OneUiLabeledBarButton(
+                iconName = "more",
+                label = "More",
+                selected = false,
+                onClick = onRename
+            )
         }
     }
 }
+
+
 
 
 
