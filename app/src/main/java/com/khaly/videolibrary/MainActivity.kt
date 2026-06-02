@@ -1637,19 +1637,20 @@ fun OneUiLabeledBarButton(
         else -> inactiveColor
     }
 
-    Surface(
-        onClick = { if (enabled) onClick() },
+    Box(
         modifier = Modifier
             .width(58.dp)
-            .height(58.dp),
-        shape = RoundedCornerShape(19.dp),
-        color = if (selected) {
-            MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
-        } else {
-            androidx.compose.ui.graphics.Color.Transparent
-        },
-        tonalElevation = 0.dp,
-        shadowElevation = 0.dp
+            .height(58.dp)
+            .clickable(
+                enabled = enabled,
+                indication = null,
+                interactionSource = remember {
+                    androidx.compose.foundation.interaction.MutableInteractionSource()
+                }
+            ) {
+                onClick()
+            },
+        contentAlignment = Alignment.Center
     ) {
         Column(
             modifier = Modifier
@@ -1675,6 +1676,8 @@ fun OneUiLabeledBarButton(
         }
     }
 }
+
+
 
 
 
