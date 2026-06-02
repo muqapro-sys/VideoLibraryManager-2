@@ -393,6 +393,41 @@ fun GlassIconButton(
 
 
 @Composable
+fun BottomBarGradientHaze() {
+    val isDark = androidx.compose.foundation.isSystemInDarkTheme()
+
+    val bottomColor = if (isDark) {
+        MaterialTheme.colorScheme.surface.copy(alpha = 0.92f)
+    } else {
+        MaterialTheme.colorScheme.surface.copy(alpha = 0.88f)
+    }
+
+    val midColor = if (isDark) {
+        MaterialTheme.colorScheme.surface.copy(alpha = 0.58f)
+    } else {
+        MaterialTheme.colorScheme.surface.copy(alpha = 0.46f)
+    }
+
+    val transparentColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.00f)
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(132.dp)
+            .background(
+                brush = androidx.compose.ui.graphics.Brush.verticalGradient(
+                    colors = listOf(
+                        transparentColor,
+                        midColor,
+                        bottomColor
+                    )
+                )
+            )
+    )
+}
+
+
+@Composable
 fun OneUiLargeHeader(
     state: VideoLibraryUiState,
     onQueryChanged: (String) -> Unit,
@@ -507,6 +542,8 @@ fun OneUiLargeHeader(
                 }
             }
         }
+
+        BottomBarGradientHaze()
 
         Row(
             modifier = Modifier
