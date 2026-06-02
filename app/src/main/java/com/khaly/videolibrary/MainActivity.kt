@@ -1124,57 +1124,44 @@ fun VideosScreen(
     var renameVideo by remember { mutableStateOf<VideoItem?>(null) }
     var pendingRename by remember { mutableStateOf<Pair<VideoItem, String>?>(null) }
 
-    var pendingScrollAnchorId by remember { mutableStateOf<Long?>(null) }
-    var pendingScrollOffset by remember { mutableStateOf(0) }
+    var restoreAfterDeleteId by remember { mutableStateOf<Long?>(null) }
+    var restoreAfterDeleteOffset by remember { mutableStateOf(0) }
 
     val selectedVideos = videos.filter { it.id in selectedIds }
 
-    fun rememberCurrentScrollBeforeDelete() {
+    fun rememberPositionBeforeDelete() {
         val anchorId = if (viewMode == ViewMode.GRID) {
-            val visibleIds = gridState.layoutInfo.visibleItemsInfo.mapNotNull { item ->
-                videos.getOrNull(item.index)?.id
-            }
-
-            visibleIds.firstOrNull { it !in selectedIds }
+            val firstVisibleIndex = gridState.firstVisibleItemIndex
+            videos.getOrNull(firstVisibleIndex)?.id
                 ?: videos.firstOrNull { it.id !in selectedIds }?.id
         } else {
-            val visibleIds = listState.layoutInfo.visibleItemsInfo.mapNotNull { item ->
-                videos.getOrNull(item.index)?.id
-            }
-
-            visibleIds.firstOrNull { it !in selectedIds }
+            val firstVisibleIndex = listState.firstVisibleItemIndex
+            videos.getOrNull(firstVisibleIndex)?.id
                 ?: videos.firstOrNull { it.id !in selectedIds }?.id
         }
 
-        pendingScrollAnchorId = anchorId
-
-        pendingScrollOffset = if (viewMode == ViewMode.GRID) {
+        restoreAfterDeleteId = anchorId
+        restoreAfterDeleteOffset = if (viewMode == ViewMode.GRID) {
             gridState.firstVisibleItemScrollOffset
         } else {
             listState.firstVisibleItemScrollOffset
         }
     }
 
-    androidx.compose.runtime.LaunchedEffect(videos.size, pendingScrollAnchorId, viewMode) {
-        val anchorId = pendingScrollAnchorId ?: return@LaunchedEffect
-        val targetIndex = videos.indexOfFirst { it.id == anchorId }
+    LaunchedEffect(videos.size, restoreAfterDeleteId, viewMode) {
+        val anchorId = restoreAfterDeleteId ?: return@LaunchedEffect
+        val newIndex = videos.indexOfFirst { it.id == anchorId }
 
-        if (targetIndex >= 0) {
+        if (newIndex >= 0) {
             if (viewMode == ViewMode.GRID) {
-                gridState.scrollToItem(
-                    index = targetIndex,
-                    scrollOffset = pendingScrollOffset
-                )
+                gridState.scrollToItem(newIndex, restoreAfterDeleteOffset)
             } else {
-                listState.scrollToItem(
-                    index = targetIndex,
-                    scrollOffset = pendingScrollOffset
-                )
+                listState.scrollToItem(newIndex, restoreAfterDeleteOffset)
             }
         }
 
-        pendingScrollAnchorId = null
-        pendingScrollOffset = 0
+        restoreAfterDeleteId = null
+        restoreAfterDeleteOffset = 0
     }
 
     BackHandler(enabled = selectedIds.isNotEmpty()) {
@@ -1283,7 +1270,7 @@ fun VideosScreen(
                 canRename = selectedIds.size == 1,
                 onShare = { shareVideos(context, selectedVideos) },
                 onDelete = {
-                    rememberCurrentScrollBeforeDelete()
+                    rememberPositionBeforeDelete()
 
                     requestDeleteVideos(
                         context = context,
@@ -1340,6 +1327,8 @@ fun VideosScreen(
         )
     }
 }
+
+
 
 
 
