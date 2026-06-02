@@ -1117,11 +1117,65 @@ fun VideosScreen(
 
     val context = LocalContext.current
 
+    val gridState = androidx.compose.foundation.lazy.grid.rememberLazyGridState()
+    val listState = androidx.compose.foundation.lazy.rememberLazyListState()
+
     var selectedIds by remember { mutableStateOf(setOf<Long>()) }
     var renameVideo by remember { mutableStateOf<VideoItem?>(null) }
     var pendingRename by remember { mutableStateOf<Pair<VideoItem, String>?>(null) }
 
+    var pendingScrollAnchorId by remember { mutableStateOf<Long?>(null) }
+    var pendingScrollOffset by remember { mutableStateOf(0) }
+
     val selectedVideos = videos.filter { it.id in selectedIds }
+
+    fun rememberCurrentScrollBeforeDelete() {
+        val anchorId = if (viewMode == ViewMode.GRID) {
+            val visibleIds = gridState.layoutInfo.visibleItemsInfo.mapNotNull { item ->
+                videos.getOrNull(item.index)?.id
+            }
+
+            visibleIds.firstOrNull { it !in selectedIds }
+                ?: videos.firstOrNull { it.id !in selectedIds }?.id
+        } else {
+            val visibleIds = listState.layoutInfo.visibleItemsInfo.mapNotNull { item ->
+                videos.getOrNull(item.index)?.id
+            }
+
+            visibleIds.firstOrNull { it !in selectedIds }
+                ?: videos.firstOrNull { it.id !in selectedIds }?.id
+        }
+
+        pendingScrollAnchorId = anchorId
+
+        pendingScrollOffset = if (viewMode == ViewMode.GRID) {
+            gridState.firstVisibleItemScrollOffset
+        } else {
+            listState.firstVisibleItemScrollOffset
+        }
+    }
+
+    androidx.compose.runtime.LaunchedEffect(videos.size, pendingScrollAnchorId, viewMode) {
+        val anchorId = pendingScrollAnchorId ?: return@LaunchedEffect
+        val targetIndex = videos.indexOfFirst { it.id == anchorId }
+
+        if (targetIndex >= 0) {
+            if (viewMode == ViewMode.GRID) {
+                gridState.scrollToItem(
+                    index = targetIndex,
+                    scrollOffset = pendingScrollOffset
+                )
+            } else {
+                listState.scrollToItem(
+                    index = targetIndex,
+                    scrollOffset = pendingScrollOffset
+                )
+            }
+        }
+
+        pendingScrollAnchorId = null
+        pendingScrollOffset = 0
+    }
 
     BackHandler(enabled = selectedIds.isNotEmpty()) {
         selectedIds = emptySet()
@@ -1160,6 +1214,7 @@ fun VideosScreen(
         if (viewMode == ViewMode.GRID) {
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
+                state = gridState,
                 contentPadding = PaddingValues(
                     start = 12.dp,
                     end = 12.dp,
@@ -1189,6 +1244,7 @@ fun VideosScreen(
             }
         } else {
             LazyColumn(
+                state = listState,
                 contentPadding = PaddingValues(
                     start = 14.dp,
                     end = 14.dp,
@@ -1227,6 +1283,8 @@ fun VideosScreen(
                 canRename = selectedIds.size == 1,
                 onShare = { shareVideos(context, selectedVideos) },
                 onDelete = {
+                    rememberCurrentScrollBeforeDelete()
+
                     requestDeleteVideos(
                         context = context,
                         videos = selectedVideos,
@@ -1270,7 +1328,7 @@ fun VideosScreen(
                     }
 
                     RenameResult.PERMISSION_REQUESTED -> {
-                        // ننتظر موافقة النظام ثم نكمل في launcher
+                        // ننتظر موافقة النظام
                     }
 
                     RenameResult.FAILED -> {
@@ -1282,6 +1340,10 @@ fun VideosScreen(
         )
     }
 }
+
+
+
+
 
 
 

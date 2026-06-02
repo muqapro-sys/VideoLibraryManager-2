@@ -5,57 +5,53 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <!-- Back folder layer -->
     <path
-        android:fillColor="#5B21B6"
-        android:pathData="M17,22
-            Q17,14 25,14
-            L45,14
-            Q51,14 55,20
-            L64,33
-            L87,33
-            Q96,33 96,42
-            L96,82
-            Q96,94 84,94
-            L24,94
-            Q12,94 12,82
-            L12,31
-            Q12,22 17,22 Z" />
+        android:fillColor="#6D28D9"
+        android:pathData="M17,24
+            Q17,16 25,16
+            L44,16
+            Q50,16 54,22
+            L62,34
+            L86,34
+            Q96,34 96,44
+            L96,83
+            Q96,94 85,94
+            L23,94
+            Q12,94 12,83
+            L12,32
+            Q12,24 17,24 Z" />
 
-    <!-- Light rear flap -->
     <path
         android:fillColor="#C4B5FD"
-        android:fillAlpha="0.72"
-        android:pathData="M53,33
-            L88,33
-            Q96,33 96,42
-            L96,50
-            L57,50
-            Q52,50 49,46
-            L43,38
-            Q40,33 47,33 Z" />
+        android:fillAlpha="0.75"
+        android:pathData="M56,34
+            L86,34
+            Q96,34 96,44
+            L96,52
+            L61,52
+            Q55,52 52,47
+            L46,39
+            Q43,34 50,34 Z" />
 
-    <!-- Front folder body -->
     <path
-        android:fillColor="#7C3AED"
-        android:pathData="M18,38
-            L88,38
-            Q98,38 98,48
+        android:fillColor="#8B5CF6"
+        android:pathData="M18,39
+            L88,39
+            Q98,39 98,49
             L98,82
             Q98,94 86,94
             L22,94
             Q10,94 10,82
-            L10,50
-            Q10,38 18,38 Z" />
+            L10,51
+            Q10,39 18,39 Z" />
 
-    <!-- Play triangle -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M46,53
-            Q46,48 51,51
-            L70,63
-            Q75,66 70,69
-            L51,81
-            Q46,84 46,78
+        android:pathData="M46,54
+            Q46,49 51,52
+            L70,64
+            Q75,67 70,70
+            L51,82
+            Q46,85 46,79
             Z" />
 </vector>
