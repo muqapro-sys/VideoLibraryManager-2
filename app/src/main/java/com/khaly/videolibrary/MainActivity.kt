@@ -1390,36 +1390,191 @@ fun SelectionIconActionButton(
     enabled: Boolean = true,
     onClick: () -> Unit
 ) {
+    val iconColor = MaterialTheme.colorScheme.onSurface.copy(
+        alpha = if (enabled) 0.94f else 0.34f
+    )
+
+    val buttonColor = if (enabled) {
+        MaterialTheme.colorScheme.surface.copy(alpha = 0.46f)
+    } else {
+        MaterialTheme.colorScheme.surface.copy(alpha = 0.18f)
+    }
+
     Surface(
         onClick = {
             if (enabled) onClick()
         },
         modifier = Modifier.size(44.dp),
         shape = RoundedCornerShape(18.dp),
-        color = if (enabled)
-            MaterialTheme.colorScheme.surface.copy(alpha = 0.42f)
-        else
-            MaterialTheme.colorScheme.surface.copy(alpha = 0.18f),
+        color = buttonColor,
         tonalElevation = 0.dp,
         shadowElevation = 0.dp,
         border = BorderStroke(
             width = 1.dp,
-            color = MaterialTheme.colorScheme.outline.copy(alpha = if (enabled) 0.24f else 0.10f)
+            color = MaterialTheme.colorScheme.outline.copy(
+                alpha = if (enabled) 0.24f else 0.10f
+            )
         )
     ) {
         Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = iconText,
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = if (enabled) 0.96f else 0.38f)
-            )
+            androidx.compose.foundation.Canvas(
+                modifier = Modifier
+                    .size(25.dp)
+                    .padding(1.dp)
+            ) {
+                val w = size.width
+                val h = size.height
+                val stroke = w * 0.085f
+
+                when (iconText) {
+                    "↗" -> {
+                        // One UI style share icon: three soft nodes connected
+                        val p1 = androidx.compose.ui.geometry.Offset(w * 0.28f, h * 0.50f)
+                        val p2 = androidx.compose.ui.geometry.Offset(w * 0.70f, h * 0.28f)
+                        val p3 = androidx.compose.ui.geometry.Offset(w * 0.70f, h * 0.72f)
+
+                        drawLine(
+                            color = iconColor,
+                            start = p1,
+                            end = p2,
+                            strokeWidth = stroke,
+                            cap = androidx.compose.ui.graphics.StrokeCap.Round
+                        )
+
+                        drawLine(
+                            color = iconColor,
+                            start = p1,
+                            end = p3,
+                            strokeWidth = stroke,
+                            cap = androidx.compose.ui.graphics.StrokeCap.Round
+                        )
+
+                        drawCircle(
+                            color = iconColor,
+                            radius = w * 0.115f,
+                            center = p1
+                        )
+
+                        drawCircle(
+                            color = iconColor,
+                            radius = w * 0.115f,
+                            center = p2
+                        )
+
+                        drawCircle(
+                            color = iconColor,
+                            radius = w * 0.115f,
+                            center = p3
+                        )
+                    }
+
+                    "✎" -> {
+                        // One UI style edit icon: rounded pencil
+                        drawLine(
+                            color = iconColor,
+                            start = androidx.compose.ui.geometry.Offset(w * 0.30f, h * 0.72f),
+                            end = androidx.compose.ui.geometry.Offset(w * 0.70f, h * 0.32f),
+                            strokeWidth = stroke * 1.35f,
+                            cap = androidx.compose.ui.graphics.StrokeCap.Round
+                        )
+
+                        drawLine(
+                            color = iconColor,
+                            start = androidx.compose.ui.geometry.Offset(w * 0.62f, h * 0.24f),
+                            end = androidx.compose.ui.geometry.Offset(w * 0.77f, h * 0.39f),
+                            strokeWidth = stroke * 1.15f,
+                            cap = androidx.compose.ui.graphics.StrokeCap.Round
+                        )
+
+                        drawLine(
+                            color = iconColor,
+                            start = androidx.compose.ui.geometry.Offset(w * 0.24f, h * 0.78f),
+                            end = androidx.compose.ui.geometry.Offset(w * 0.44f, h * 0.73f),
+                            strokeWidth = stroke,
+                            cap = androidx.compose.ui.graphics.StrokeCap.Round
+                        )
+
+                        drawLine(
+                            color = iconColor.copy(alpha = 0.72f),
+                            start = androidx.compose.ui.geometry.Offset(w * 0.22f, h * 0.86f),
+                            end = androidx.compose.ui.geometry.Offset(w * 0.78f, h * 0.86f),
+                            strokeWidth = stroke,
+                            cap = androidx.compose.ui.graphics.StrokeCap.Round
+                        )
+                    }
+
+                    "⌫" -> {
+                        // One UI style delete icon: rounded trash bin
+                        drawLine(
+                            color = iconColor,
+                            start = androidx.compose.ui.geometry.Offset(w * 0.30f, h * 0.34f),
+                            end = androidx.compose.ui.geometry.Offset(w * 0.70f, h * 0.34f),
+                            strokeWidth = stroke,
+                            cap = androidx.compose.ui.graphics.StrokeCap.Round
+                        )
+
+                        drawLine(
+                            color = iconColor,
+                            start = androidx.compose.ui.geometry.Offset(w * 0.42f, h * 0.24f),
+                            end = androidx.compose.ui.geometry.Offset(w * 0.58f, h * 0.24f),
+                            strokeWidth = stroke,
+                            cap = androidx.compose.ui.graphics.StrokeCap.Round
+                        )
+
+                        val path = androidx.compose.ui.graphics.Path().apply {
+                            moveTo(w * 0.34f, h * 0.40f)
+                            lineTo(w * 0.38f, h * 0.78f)
+                            quadraticBezierTo(w * 0.39f, h * 0.86f, w * 0.47f, h * 0.86f)
+                            lineTo(w * 0.63f, h * 0.86f)
+                            quadraticBezierTo(w * 0.71f, h * 0.86f, w * 0.72f, h * 0.78f)
+                            lineTo(w * 0.76f, h * 0.40f)
+                        }
+
+                        drawPath(
+                            path = path,
+                            color = iconColor,
+                            style = androidx.compose.ui.graphics.drawscope.Stroke(
+                                width = stroke,
+                                cap = androidx.compose.ui.graphics.StrokeCap.Round,
+                                join = androidx.compose.ui.graphics.StrokeJoin.Round
+                            )
+                        )
+
+                        drawLine(
+                            color = iconColor.copy(alpha = 0.78f),
+                            start = androidx.compose.ui.geometry.Offset(w * 0.47f, h * 0.49f),
+                            end = androidx.compose.ui.geometry.Offset(w * 0.47f, h * 0.74f),
+                            strokeWidth = stroke * 0.75f,
+                            cap = androidx.compose.ui.graphics.StrokeCap.Round
+                        )
+
+                        drawLine(
+                            color = iconColor.copy(alpha = 0.78f),
+                            start = androidx.compose.ui.geometry.Offset(w * 0.61f, h * 0.49f),
+                            end = androidx.compose.ui.geometry.Offset(w * 0.61f, h * 0.74f),
+                            strokeWidth = stroke * 0.75f,
+                            cap = androidx.compose.ui.graphics.StrokeCap.Round
+                        )
+                    }
+
+                    else -> {
+                        // fallback modern dot icon
+                        drawCircle(
+                            color = iconColor,
+                            radius = w * 0.12f,
+                            center = androidx.compose.ui.geometry.Offset(w * 0.50f, h * 0.50f)
+                        )
+                    }
+                }
+            }
         }
     }
 }
+
+
 
 
 
