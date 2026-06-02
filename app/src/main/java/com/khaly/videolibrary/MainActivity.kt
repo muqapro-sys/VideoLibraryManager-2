@@ -1101,6 +1101,23 @@ fun FoldersScreen(
 
 
 
+private object VideoDeleteScrollMemory {
+    var active: Boolean = false
+    var anchorVideoId: Long? = null
+    var fallbackIndex: Int = 0
+    var scrollOffset: Int = 0
+    var wasGrid: Boolean = true
+
+    fun clear() {
+        active = false
+        anchorVideoId = null
+        fallbackIndex = 0
+        scrollOffset = 0
+        wasGrid = true
+    }
+}
+
+
 @Composable
 fun VideosScreen(
     videos: List<VideoItem>,
@@ -1124,44 +1141,70 @@ fun VideosScreen(
     var renameVideo by remember { mutableStateOf<VideoItem?>(null) }
     var pendingRename by remember { mutableStateOf<Pair<VideoItem, String>?>(null) }
 
-    var restoreAfterDeleteId by remember { mutableStateOf<Long?>(null) }
-    var restoreAfterDeleteOffset by remember { mutableStateOf(0) }
-
     val selectedVideos = videos.filter { it.id in selectedIds }
 
-    fun rememberPositionBeforeDelete() {
-        val anchorId = if (viewMode == ViewMode.GRID) {
-            val firstVisibleIndex = gridState.firstVisibleItemIndex
-            videos.getOrNull(firstVisibleIndex)?.id
-                ?: videos.firstOrNull { it.id !in selectedIds }?.id
+    fun saveScrollPointBeforeDelete() {
+        val firstIndex = if (viewMode == ViewMode.GRID) {
+            gridState.firstVisibleItemIndex
         } else {
-            val firstVisibleIndex = listState.firstVisibleItemIndex
-            videos.getOrNull(firstVisibleIndex)?.id
-                ?: videos.firstOrNull { it.id !in selectedIds }?.id
+            listState.firstVisibleItemIndex
         }
 
-        restoreAfterDeleteId = anchorId
-        restoreAfterDeleteOffset = if (viewMode == ViewMode.GRID) {
+        val firstOffset = if (viewMode == ViewMode.GRID) {
             gridState.firstVisibleItemScrollOffset
         } else {
             listState.firstVisibleItemScrollOffset
         }
+
+        // نختار أول فيديو ظاهر غير محذوف. إذا كان أول الظاهر من المحددات، نبحث عن الذي بعده.
+        val anchor = videos
+            .drop(firstIndex)
+            .firstOrNull { it.id !in selectedIds }
+            ?: videos.take(firstIndex).lastOrNull { it.id !in selectedIds }
+
+        VideoDeleteScrollMemory.active = true
+        VideoDeleteScrollMemory.anchorVideoId = anchor?.id
+        VideoDeleteScrollMemory.fallbackIndex = firstIndex.coerceAtLeast(0)
+        VideoDeleteScrollMemory.scrollOffset = firstOffset.coerceAtLeast(0)
+        VideoDeleteScrollMemory.wasGrid = viewMode == ViewMode.GRID
     }
 
-    LaunchedEffect(videos.size, restoreAfterDeleteId, viewMode) {
-        val anchorId = restoreAfterDeleteId ?: return@LaunchedEffect
-        val newIndex = videos.indexOfFirst { it.id == anchorId }
+    LaunchedEffect(
+        videos.size,
+        videos.firstOrNull()?.id,
+        videos.lastOrNull()?.id,
+        viewMode
+    ) {
+        if (VideoDeleteScrollMemory.active) {
+            val anchorId = VideoDeleteScrollMemory.anchorVideoId
 
-        if (newIndex >= 0) {
-            if (viewMode == ViewMode.GRID) {
-                gridState.scrollToItem(newIndex, restoreAfterDeleteOffset)
+            val indexByAnchor = if (anchorId != null) {
+                videos.indexOfFirst { it.id == anchorId }
             } else {
-                listState.scrollToItem(newIndex, restoreAfterDeleteOffset)
+                -1
             }
-        }
 
-        restoreAfterDeleteId = null
-        restoreAfterDeleteOffset = 0
+            val targetIndex = if (indexByAnchor >= 0) {
+                indexByAnchor
+            } else {
+                VideoDeleteScrollMemory.fallbackIndex.coerceIn(
+                    0,
+                    (videos.size - 1).coerceAtLeast(0)
+                )
+            }
+
+            val offset = VideoDeleteScrollMemory.scrollOffset
+
+            if (videos.isNotEmpty()) {
+                if (viewMode == ViewMode.GRID) {
+                    gridState.scrollToItem(targetIndex, offset)
+                } else {
+                    listState.scrollToItem(targetIndex, offset)
+                }
+            }
+
+            VideoDeleteScrollMemory.clear()
+        }
     }
 
     BackHandler(enabled = selectedIds.isNotEmpty()) {
@@ -1270,7 +1313,7 @@ fun VideosScreen(
                 canRename = selectedIds.size == 1,
                 onShare = { shareVideos(context, selectedVideos) },
                 onDelete = {
-                    rememberPositionBeforeDelete()
+                    saveScrollPointBeforeDelete()
 
                     requestDeleteVideos(
                         context = context,
@@ -1327,6 +1370,8 @@ fun VideosScreen(
         )
     }
 }
+
+
 
 
 
