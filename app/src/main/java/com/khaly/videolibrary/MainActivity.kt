@@ -360,6 +360,7 @@ fun GlassIconButton(
         "⌕" -> "search"
         "☷" -> "list"
         "▤" -> "grid"
+        "◇" -> "category"
         else -> "more"
     }
 
@@ -367,6 +368,7 @@ fun GlassIconButton(
         "⌕" -> "Search"
         "☷" -> "List"
         "▤" -> "Grid"
+        "◇" -> "Category"
         else -> "More"
     }
 
@@ -377,6 +379,8 @@ fun GlassIconButton(
         onClick = onClick
     )
 }
+
+
 
 
 
@@ -539,6 +543,14 @@ fun OneUiLargeHeader(
                         searchActive = true
                     }
                 )
+
+                GlassIconButton(
+                    text = "◇",
+                    onClick = {
+                        onTabSelect(1)
+                    }
+                )
+
 
                 GlassSortButton(
                     sortMode = state.sortMode,
@@ -1534,6 +1546,29 @@ fun OneUiLineIcon(
                 drawLine(color, p(0.26f, 0.72f), p(0.50f, 0.72f), strokeWidth = stroke, cap = androidx.compose.ui.graphics.StrokeCap.Round)
             }
 
+            "category" -> {
+                val tag = androidx.compose.ui.graphics.Path().apply {
+                    moveTo(w * 0.22f, h * 0.30f)
+                    quadraticBezierTo(w * 0.22f, h * 0.22f, w * 0.30f, h * 0.22f)
+                    lineTo(w * 0.58f, h * 0.22f)
+                    quadraticBezierTo(w * 0.66f, h * 0.22f, w * 0.72f, h * 0.28f)
+                    lineTo(w * 0.82f, h * 0.38f)
+                    quadraticBezierTo(w * 0.88f, h * 0.44f, w * 0.82f, h * 0.50f)
+                    lineTo(w * 0.50f, h * 0.82f)
+                    quadraticBezierTo(w * 0.44f, h * 0.88f, w * 0.38f, h * 0.82f)
+                    lineTo(w * 0.22f, h * 0.66f)
+                    quadraticBezierTo(w * 0.16f, h * 0.60f, w * 0.22f, h * 0.54f)
+                    close()
+                }
+                drawPath(tag, color, style = outline)
+                drawCircle(
+                    color = color,
+                    radius = w * 0.055f,
+                    center = p(0.39f, 0.39f),
+                    style = outline
+                )
+            }
+
             else -> {
                 drawCircle(color, radius = w * 0.07f, center = p(0.50f, 0.50f))
             }
@@ -1568,38 +1603,43 @@ fun OneUiLabeledBarButton(
     Surface(
         onClick = { if (enabled) onClick() },
         modifier = Modifier
-            .width(82.dp)
-            .height(76.dp),
-        shape = RoundedCornerShape(22.dp),
-        color = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
-                else androidx.compose.ui.graphics.Color.Transparent,
+            .width(58.dp)
+            .height(58.dp),
+        shape = RoundedCornerShape(19.dp),
+        color = if (selected) {
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
+        } else {
+            androidx.compose.ui.graphics.Color.Transparent
+        },
         tonalElevation = 0.dp,
         shadowElevation = 0.dp
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = 8.dp, bottom = 6.dp),
+                .padding(top = 5.dp, bottom = 4.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
             OneUiLineIcon(
                 name = iconName,
                 color = iconColor,
-                modifier = Modifier.size(34.dp)
+                modifier = Modifier.size(25.dp)
             )
 
-            Spacer(Modifier.height(5.dp))
+            Spacer(Modifier.height(3.dp))
 
             Text(
                 text = label,
-                fontSize = 13.sp,
+                fontSize = 10.sp,
                 color = textColor,
                 maxLines = 1
             )
         }
     }
 }
+
+
 
 
 @Composable
@@ -1650,8 +1690,8 @@ fun SelectionActionBar(
     Surface(
         modifier = modifier
             .fillMaxWidth()
-            .height(104.dp),
-        shape = RoundedCornerShape(38.dp),
+            .height(86.dp),
+        shape = RoundedCornerShape(34.dp),
         color = MaterialTheme.colorScheme.surface.copy(alpha = 0.88f),
         tonalElevation = 0.dp,
         shadowElevation = 0.dp,
@@ -1663,7 +1703,7 @@ fun SelectionActionBar(
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 12.dp),
+                .padding(horizontal = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
@@ -1671,6 +1711,7 @@ fun SelectionActionBar(
                 iconName = "move",
                 label = "Move",
                 selected = false,
+                enabled = false,
                 onClick = { }
             )
 
@@ -1678,17 +1719,30 @@ fun SelectionActionBar(
                 iconName = "copy",
                 label = "Copy",
                 selected = false,
+                enabled = false,
                 onClick = { }
             )
 
-            SelectionIconActionButton(
-                iconText = "↗",
+            OneUiLabeledBarButton(
+                iconName = "share",
+                label = "Share",
+                selected = false,
                 enabled = true,
                 onClick = onShare
             )
 
-            SelectionIconActionButton(
-                iconText = "⌫",
+            OneUiLabeledBarButton(
+                iconName = "rename",
+                label = "Rename",
+                selected = false,
+                enabled = canRename,
+                onClick = onRename
+            )
+
+            OneUiLabeledBarButton(
+                iconName = "delete",
+                label = "Delete",
+                selected = false,
                 enabled = true,
                 onClick = onDelete
             )
@@ -1697,11 +1751,14 @@ fun SelectionActionBar(
                 iconName = "more",
                 label = "More",
                 selected = false,
-                onClick = onRename
+                enabled = false,
+                onClick = { }
             )
         }
     }
 }
+
+
 
 
 
