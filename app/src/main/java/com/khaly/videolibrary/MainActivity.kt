@@ -361,14 +361,12 @@ fun GlassIconButton(
         "☷" -> "list"
         "▤" -> "grid"
         else -> "more"
-        else -> "more"
     }
 
     val label = when (text) {
         "⌕" -> "Search"
         "☷" -> "List"
         "▤" -> "Grid"
-        else -> "More"
         else -> "More"
     }
 
@@ -379,6 +377,8 @@ fun GlassIconButton(
         onClick = onClick
     )
 }
+
+
 
 
 
