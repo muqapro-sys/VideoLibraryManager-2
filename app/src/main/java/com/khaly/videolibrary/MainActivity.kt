@@ -360,7 +360,7 @@ fun GlassIconButton(
         "⌕" -> "search"
         "☷" -> "list"
         "▤" -> "grid"
-        "◇" -> "sort"
+        else -> "more"
         else -> "more"
     }
 
@@ -368,7 +368,7 @@ fun GlassIconButton(
         "⌕" -> "Search"
         "☷" -> "List"
         "▤" -> "Grid"
-        "◇" -> "Category"
+        else -> "More"
         else -> "More"
     }
 
