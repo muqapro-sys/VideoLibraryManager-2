@@ -113,6 +113,7 @@ import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.foundation.layout.offset
 
 private const val PREFS_NAME = "video_library_prefs"
 private const val KEY_DEFAULT_PLAYER_PACKAGE = "default_video_player_package"
@@ -546,6 +547,7 @@ fun OneUiLargeHeader(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
+                .offset(y = 24.dp)
         ) {
             BottomBarGradientHaze()
         }
@@ -554,6 +556,7 @@ fun OneUiLargeHeader(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
+                .offset(y = 24.dp)
                 .padding(start = 14.dp, end = 14.dp, bottom = 4.dp),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
