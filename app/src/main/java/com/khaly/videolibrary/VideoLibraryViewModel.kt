@@ -82,10 +82,12 @@ class VideoLibraryViewModel(
 
     fun setTab(tab: Int) {
     _state.value = if (tab == 0) {
-        _state.value.copy(
+        val current = _state.value
+        current.copy(
             selectedTab = 0,
             selectedFolder = null,
-            query = ""
+            query = "",
+            filteredVideos = current.videos
         )
     } else {
         _state.value.copy(
@@ -93,6 +95,8 @@ class VideoLibraryViewModel(
         )
     }
 }
+
+
 
 
 
