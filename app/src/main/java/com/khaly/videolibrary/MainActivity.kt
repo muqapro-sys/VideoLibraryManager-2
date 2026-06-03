@@ -346,7 +346,7 @@ fun VideoLibraryApp(viewModel: VideoLibraryViewModel) {
                 StatusBarGradientHaze()
             }
 
-            if (state.selectedFolder != null) {
+            if (state.selectedFolder != null && state.selectedTab != 0) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -617,7 +617,9 @@ fun OneUiLargeHeader(
                 GlassTopTabButton(
                     text = "▦",
                     selected = state.selectedTab == 0,
-                    onClick = { onTabSelect(0) }
+                    onClick = {
+                        onTabSelect(0)
+                    }
                 )
 
                 GlassTopTabButton(
