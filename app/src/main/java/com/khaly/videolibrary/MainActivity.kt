@@ -202,6 +202,67 @@ fun StatusBarGradientHaze() {
 
 
 @Composable
+fun FolderTitleGlassBar(
+    title: String,
+    onBack: () -> Unit
+) {
+    Surface(
+        modifier = Modifier
+            .statusBarsPadding()
+            .padding(start = 14.dp, end = 14.dp, top = 8.dp)
+            .fillMaxWidth()
+            .height(56.dp),
+        shape = RoundedCornerShape(28.dp),
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.72f),
+        tonalElevation = 0.dp,
+        shadowElevation = 0.dp,
+        border = BorderStroke(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.34f)
+        )
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 10.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = title,
+                modifier = Modifier.align(Alignment.Center),
+                fontSize = 18.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1
+            )
+
+            Box(
+                modifier = Modifier
+                    .align(Alignment.CenterStart)
+                    .size(42.dp)
+                    .clickable(
+                        indication = null,
+                        interactionSource = remember {
+                            androidx.compose.foundation.interaction.MutableInteractionSource()
+                        }
+                    ) {
+                        onBack()
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "‹",
+                    fontSize = 34.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+    }
+}
+
+
+@Composable
 fun VideoLibraryApp(viewModel: VideoLibraryViewModel) {
     val context = LocalContext.current
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -301,6 +362,19 @@ fun VideoLibraryApp(viewModel: VideoLibraryViewModel) {
             }
 
             if (state.selectedFolder != null) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .fillMaxWidth()
+                ) {
+                    FolderTitleGlassBar(
+                        title = state.selectedFolder.name,
+                        onBack = {
+                            viewModel.openFolder(null)
+                        }
+                    )
+                }
+
                 AssistChip(
                     modifier = Modifier
                         .align(Alignment.TopStart)
