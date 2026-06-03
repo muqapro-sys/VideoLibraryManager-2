@@ -368,7 +368,7 @@ fun VideoLibraryApp(viewModel: VideoLibraryViewModel) {
                         .fillMaxWidth()
                 ) {
                     FolderTitleGlassBar(
-                        title = state.selectedFolder.name,
+                        title = state.selectedFolder ?: "Folder",
                         onBack = {
                             viewModel.openFolder(null)
                         }
