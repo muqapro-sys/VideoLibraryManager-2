@@ -114,7 +114,6 @@ import java.util.concurrent.TimeUnit
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.foundation.layout.offset
-import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 
 private const val PREFS_NAME = "video_library_prefs"
 private const val KEY_DEFAULT_PLAYER_PACKAGE = "default_video_player_package"
@@ -202,65 +201,45 @@ fun StatusBarGradientHaze() {
 
 
 
+
+
+
+
 @Composable
-fun FolderTitleGlassBar(
-    title: String,
-    onBack: () -> Unit
+fun ExistingFolderTitleGlassSurface(
+    title: String
 ) {
     Surface(
         modifier = Modifier
-            .statusBarsPadding()
-            .padding(start = 14.dp, end = 14.dp, top = 8.dp)
-            .fillMaxWidth()
-            .height(56.dp),
-        shape = RoundedCornerShape(28.dp),
-        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.72f),
+            .height(42.dp)
+            .widthIn(min = 150.dp, max = 280.dp),
+        shape = RoundedCornerShape(21.dp),
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.68f),
         tonalElevation = 0.dp,
         shadowElevation = 0.dp,
         border = BorderStroke(
             width = 1.dp,
-            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.34f)
+            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.32f)
         )
     ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 10.dp),
+                .padding(horizontal = 16.dp),
             contentAlignment = Alignment.Center
         ) {
             Text(
                 text = title,
-                modifier = Modifier.align(Alignment.Center),
-                fontSize = 18.sp,
+                fontSize = 15.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1
             )
-
-            Box(
-                modifier = Modifier
-                    .align(Alignment.CenterStart)
-                    .size(42.dp)
-                    .clickable(
-                        indication = null,
-                        interactionSource = remember {
-                            androidx.compose.foundation.interaction.MutableInteractionSource()
-                        }
-                    ) {
-                        onBack()
-                    },
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "‹",
-                    fontSize = 34.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
         }
     }
 }
+
+
 
 
 @Composable
@@ -368,14 +347,7 @@ fun VideoLibraryApp(viewModel: VideoLibraryViewModel) {
                         .align(Alignment.TopCenter)
                         .fillMaxWidth()
                 ) {
-                    val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
-                    FolderTitleGlassBar(
-                        title = state.selectedFolder ?: "Folder",
-                        onBack = {
-                            backDispatcher?.onBackPressed()
-                        }
-                    )
-                }
+}
 
                 AssistChip(
                     modifier = Modifier
@@ -383,7 +355,7 @@ fun VideoLibraryApp(viewModel: VideoLibraryViewModel) {
                         .statusBarsPadding()
                         .padding(start = 18.dp, top = 70.dp),
                     onClick = viewModel::clearFolder,
-                    label = { Text("Folder: ${state.selectedFolder}  ×") }
+                    label = { ExistingFolderTitleGlassSurface(title = state.selectedFolder ?: "Folder") }
                 )
             }
         }
