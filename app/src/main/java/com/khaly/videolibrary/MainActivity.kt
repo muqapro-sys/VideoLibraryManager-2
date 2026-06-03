@@ -212,35 +212,35 @@ fun ExistingFolderTitleGlassSurface(
 ) {
     Surface(
         modifier = Modifier
-            .statusBarsPadding()
-            .padding(top = 2.dp)
-            .height(36.dp)
-            .widthIn(min = 118.dp, max = 230.dp),
-        shape = RoundedCornerShape(18.dp),
-        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.62f),
+            .height(32.dp)
+            .widthIn(min = 108.dp, max = 220.dp),
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.58f),
         tonalElevation = 0.dp,
         shadowElevation = 0.dp,
         border = BorderStroke(
             width = 1.dp,
-            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.30f)
+            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.42f)
         )
     ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 12.dp),
+                .padding(horizontal = 10.dp),
             contentAlignment = Alignment.Center
         ) {
             Text(
                 text = title,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.SemiBold,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1
             )
         }
     }
 }
+
+
 
 
 
@@ -347,22 +347,18 @@ fun VideoLibraryApp(viewModel: VideoLibraryViewModel) {
             }
 
             if (state.selectedFolder != null) {
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .fillMaxWidth()
-                ) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .statusBarsPadding()
+            .padding(top = 0.dp),
+        contentAlignment = Alignment.TopCenter
+    ) {
+        ExistingFolderTitleGlassSurface(
+            title = state.selectedFolder ?: "Folder"
+        )
+    }
 }
-
-                AssistChip(
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .statusBarsPadding()
-                        .padding(start = 18.dp, top = 70.dp),
-                    onClick = viewModel::clearFolder,
-                    label = { ExistingFolderTitleGlassSurface(title = state.selectedFolder ?: "Folder") }
-                )
-            }
         }
     }
 }
