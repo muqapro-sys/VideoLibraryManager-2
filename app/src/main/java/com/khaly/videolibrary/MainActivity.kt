@@ -334,7 +334,9 @@ fun VideoLibraryApp(viewModel: VideoLibraryViewModel) {
                     },
                     onSortChanged = viewModel::setSortMode,
                     onRefresh = viewModel::scanVideos,
-                    onTabSelect = viewModel::setTab
+                    onTabSelect = { tab ->
+                viewModel.setTab(tab)
+            }
                 )
             }
 
