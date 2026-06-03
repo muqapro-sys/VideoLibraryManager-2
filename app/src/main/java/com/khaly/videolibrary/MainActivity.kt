@@ -114,6 +114,7 @@ import java.util.concurrent.TimeUnit
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.foundation.layout.offset
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 
 private const val PREFS_NAME = "video_library_prefs"
 private const val KEY_DEFAULT_PLAYER_PACKAGE = "default_video_player_package"
@@ -367,10 +368,11 @@ fun VideoLibraryApp(viewModel: VideoLibraryViewModel) {
                         .align(Alignment.TopCenter)
                         .fillMaxWidth()
                 ) {
+                    val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
                     FolderTitleGlassBar(
                         title = state.selectedFolder ?: "Folder",
                         onBack = {
-                            viewModel.openFolder(null)
+                            backDispatcher?.onBackPressed()
                         }
                     )
                 }
