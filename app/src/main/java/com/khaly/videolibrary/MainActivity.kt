@@ -114,6 +114,7 @@ import java.util.concurrent.TimeUnit
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.widthIn
 
 private const val PREFS_NAME = "video_library_prefs"
 private const val KEY_DEFAULT_PLAYER_PACKAGE = "default_video_player_package"
