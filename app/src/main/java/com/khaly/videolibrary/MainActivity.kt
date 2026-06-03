@@ -212,26 +212,28 @@ fun ExistingFolderTitleGlassSurface(
 ) {
     Surface(
         modifier = Modifier
-            .height(42.dp)
-            .widthIn(min = 150.dp, max = 280.dp),
-        shape = RoundedCornerShape(21.dp),
-        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.68f),
+            .statusBarsPadding()
+            .padding(top = 2.dp)
+            .height(36.dp)
+            .widthIn(min = 118.dp, max = 230.dp),
+        shape = RoundedCornerShape(18.dp),
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.62f),
         tonalElevation = 0.dp,
         shadowElevation = 0.dp,
         border = BorderStroke(
             width = 1.dp,
-            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.32f)
+            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.30f)
         )
     ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 16.dp),
+                .padding(horizontal = 12.dp),
             contentAlignment = Alignment.Center
         ) {
             Text(
                 text = title,
-                fontSize = 15.sp,
+                fontSize = 13.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1
@@ -239,6 +241,8 @@ fun ExistingFolderTitleGlassSurface(
         }
     }
 }
+
+
 
 
 
