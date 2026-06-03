@@ -81,18 +81,20 @@ class VideoLibraryViewModel(
     }
 
     fun setTab(tab: Int) {
-    state.value = if (tab == 0) {
-        state.value.copy(
+    _state.value = if (tab == 0) {
+        _state.value.copy(
             selectedTab = 0,
             selectedFolder = null,
             query = ""
         )
     } else {
-        state.value.copy(
+        _state.value.copy(
             selectedTab = tab
         )
     }
 }
+
+
 
 
 
