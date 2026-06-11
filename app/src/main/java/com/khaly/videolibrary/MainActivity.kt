@@ -753,6 +753,58 @@ fun QuickStatChip(label: String, value: String) {
 }
 
 @Composable
+fun SuperSortMenuItem(
+    title: String,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    Surface(
+        onClick = onClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(46.dp),
+        shape = RoundedCornerShape(18.dp),
+        color = if (selected) {
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+        } else {
+            androidx.compose.ui.graphics.Color.Transparent
+        },
+        tonalElevation = 0.dp,
+        shadowElevation = 0.dp
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = title,
+                fontSize = 14.sp,
+                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+                color = if (selected) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.onSurface
+                },
+                maxLines = 1
+            )
+
+            if (selected) {
+                Text(
+                    text = "✓",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+    }
+}
+
+
+@Composable
 fun GlassSortButton(
     sortMode: SortMode,
     onSortChanged: (SortMode) -> Unit
@@ -769,15 +821,37 @@ fun GlassSortButton(
 
         DropdownMenu(
             expanded = expanded,
-            onDismissRequest = { expanded = false }
+            onDismissRequest = { expanded = false },
+            modifier = Modifier
+                .widthIn(min = 220.dp, max = 280.dp)
+                .background(
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.94f),
+                    shape = RoundedCornerShape(26.dp)
+                )
+                .border(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f),
+                    shape = RoundedCornerShape(26.dp)
+                )
+                .padding(8.dp)
         ) {
+            Text(
+                text = "Sort videos",
+                modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+                fontSize = 13.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
             SortMode.values().forEach { mode ->
-                DropdownMenuItem(
-                    text = {
-                        Text(
-                            text = mode.name.lowercase().replaceFirstChar { it.uppercase() }
-                        )
-                    },
+                val label = mode.name
+                    .lowercase()
+                    .replace("_", " ")
+                    .replaceFirstChar { it.uppercase() }
+
+                SuperSortMenuItem(
+                    title = label,
+                    selected = mode == sortMode,
                     onClick = {
                         expanded = false
                         onSortChanged(mode)
@@ -787,6 +861,8 @@ fun GlassSortButton(
         }
     }
 }
+
+
 
 
 
