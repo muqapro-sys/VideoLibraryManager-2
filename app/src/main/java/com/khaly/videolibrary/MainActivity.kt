@@ -118,6 +118,8 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.border
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupProperties
 
 private const val PREFS_NAME = "video_library_prefs"
 private const val KEY_DEFAULT_PLAYER_PACKAGE = "default_video_player_package"
@@ -819,48 +821,79 @@ fun GlassSortButton(
             onClick = { expanded = true }
         )
 
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-            modifier = Modifier
-                .widthIn(min = 220.dp, max = 280.dp)
-                .background(
-                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.94f),
-                    shape = RoundedCornerShape(26.dp)
+        if (expanded) {
+            Popup(
+                alignment = Alignment.BottomEnd,
+                onDismissRequest = { expanded = false },
+                properties = PopupProperties(
+                    focusable = true,
+                    dismissOnBackPress = true,
+                    dismissOnClickOutside = true
                 )
-                .border(
-                    width = 1.dp,
-                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f),
-                    shape = RoundedCornerShape(26.dp)
-                )
-                .padding(8.dp)
-        ) {
-            Text(
-                text = "Sort videos",
-                modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
-                fontSize = 13.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            ) {
+                val shape = RoundedCornerShape(30.dp)
 
-            SortMode.values().forEach { mode ->
-                val label = mode.name
-                    .lowercase()
-                    .replace("_", " ")
-                    .replaceFirstChar { it.uppercase() }
+                Surface(
+                    modifier = Modifier
+                        .padding(end = 10.dp, bottom = 82.dp)
+                        .widthIn(min = 232.dp, max = 292.dp)
+                        .clip(shape)
+                        .background(
+                            brush = androidx.compose.ui.graphics.Brush.verticalGradient(
+                                colors = listOf(
+                                    MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
+                                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.78f),
+                                    MaterialTheme.colorScheme.surface.copy(alpha = 0.88f)
+                                )
+                            ),
+                            shape = shape
+                        ),
+                    shape = shape,
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.72f),
+                    tonalElevation = 0.dp,
+                    shadowElevation = 0.dp,
+                    border = BorderStroke(
+                        width = 1.dp,
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.42f)
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .clip(shape)
+                            .padding(10.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Text(
+                            text = "Sort videos",
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
 
-                SuperSortMenuItem(
-                    title = label,
-                    selected = mode == sortMode,
-                    onClick = {
-                        expanded = false
-                        onSortChanged(mode)
+                        SortMode.values().forEach { mode ->
+                            val label = mode.name
+                                .lowercase()
+                                .replace("_", " ")
+                                .replaceFirstChar { it.uppercase() }
+
+                            SuperSortMenuItem(
+                                title = label,
+                                selected = mode == sortMode,
+                                onClick = {
+                                    expanded = false
+                                    onSortChanged(mode)
+                                }
+                            )
+                        }
                     }
-                )
+                }
             }
         }
     }
 }
+
+
 
 
 
