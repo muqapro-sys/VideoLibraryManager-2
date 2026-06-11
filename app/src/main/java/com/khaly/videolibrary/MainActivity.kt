@@ -300,11 +300,7 @@ fun VideoLibraryApp(viewModel: VideoLibraryViewModel) {
                         onOpenFolder = { viewModel.openFolder(it.name) }
                     )
 
-                    else -> Column(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            SmartCollectionStrip()
-            VideosScreen(
+                    else -> VideosScreen(
                         videos = state.filteredVideos,
                         favorites = state.favorites,
                         viewMode = state.viewMode,
@@ -323,7 +319,6 @@ fun VideoLibraryApp(viewModel: VideoLibraryViewModel) {
                         onFavorite = { viewModel.toggleFavorite(it.id) },
                         onRefresh = viewModel::scanVideos
                     )
-        }
                 }
             }
 
@@ -524,6 +519,18 @@ fun OneUiLargeHeader(
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
+        if (state.selectedTab == 0 && state.query.isBlank()) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .fillMaxWidth()
+                    .statusBarsPadding()
+                    .padding(top = 6.dp)
+            ) {
+                SmartCollectionStrip()
+            }
+        }
+
         if (searchActive) {
             Box(
                 modifier = Modifier
@@ -1366,22 +1373,38 @@ fun SuperQualityBadge(
 fun SmartCollectionStrip(
     modifier: Modifier = Modifier
 ) {
-    Row(
+    Surface(
         modifier = modifier
             .fillMaxWidth()
-            .horizontalScroll(rememberScrollState())
-            .padding(horizontal = 14.dp, vertical = 6.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .padding(horizontal = 12.dp),
+        shape = RoundedCornerShape(28.dp),
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.70f),
+        tonalElevation = 0.dp,
+        shadowElevation = 0.dp,
+        border = BorderStroke(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.28f)
+        )
     ) {
-        SuperVideoMetaChip("Recent")
-        SuperVideoMetaChip("Large")
-        SuperVideoMetaChip("4K")
-        SuperVideoMetaChip("Camera")
-        SuperVideoMetaChip("Downloads")
-        SuperVideoMetaChip("WhatsApp")
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState())
+                .padding(horizontal = 10.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            SmartCollectionChip("Recent", selected = true)
+            SmartCollectionChip("Large")
+            SmartCollectionChip("4K")
+            SmartCollectionChip("Camera")
+            SmartCollectionChip("Downloads")
+            SmartCollectionChip("WhatsApp")
+        }
     }
 }
+
+
 
 
 @Composable
