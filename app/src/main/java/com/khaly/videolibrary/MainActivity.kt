@@ -1371,9 +1371,52 @@ fun SuperQualityBadge(
 
 @Composable
 fun SmartCollectionChip(
-    title: String,
+    icon: String,
     selected: Boolean = false,
     onClick: () -> Unit = {}
+) {
+    Surface(
+        onClick = onClick,
+        modifier = Modifier
+            .width(42.dp)
+            .height(42.dp),
+        shape = RoundedCornerShape(999.dp),
+        color = if (selected) {
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)
+        } else {
+            MaterialTheme.colorScheme.surface.copy(alpha = 0.58f)
+        },
+        border = BorderStroke(
+            width = if (selected) 1.4.dp else 1.dp,
+            color = if (selected) {
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.48f)
+            } else {
+                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.30f)
+            }
+        ),
+        tonalElevation = 0.dp,
+        shadowElevation = 0.dp
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = icon,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = if (selected) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                },
+                maxLines = 1
+            )
+        }
+    }
+}
+
+
 ) {
     Surface(
         onClick = onClick,
@@ -1412,8 +1455,14 @@ fun SmartCollectionChip(
 
 @Composable
 fun SmartCollectionStrip(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    selected: String? = null,
+    onSelected: (String?) -> Unit = {}
 ) {
+    fun nextValue(key: String): String? {
+        return if (selected == key) null else key
+    }
+
     Surface(
         modifier = modifier
             .fillMaxWidth()
@@ -1431,19 +1480,56 @@ fun SmartCollectionStrip(
             modifier = Modifier
                 .fillMaxWidth()
                 .horizontalScroll(rememberScrollState())
-                .padding(horizontal = 10.dp, vertical = 8.dp),
+                .padding(horizontal = 10.dp, vertical = 7.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            SmartCollectionChip("Recent", selected = true)
-            SmartCollectionChip("Large")
-            SmartCollectionChip("4K")
-            SmartCollectionChip("Camera")
-            SmartCollectionChip("Downloads")
-            SmartCollectionChip("WhatsApp")
+            SmartCollectionChip(
+                icon = "◷",
+                selected = selected == "RECENT",
+                onClick = { onSelected(nextValue("RECENT")) }
+            )
+
+            SmartCollectionChip(
+                icon = "◆",
+                selected = selected == "LARGE",
+                onClick = { onSelected(nextValue("LARGE")) }
+            )
+
+            SmartCollectionChip(
+                icon = "▣",
+                selected = selected == "IDMP",
+                onClick = { onSelected(nextValue("IDMP")) }
+            )
+
+            SmartCollectionChip(
+                icon = "◉",
+                selected = selected == "CAMERA",
+                onClick = { onSelected(nextValue("CAMERA")) }
+            )
+
+            SmartCollectionChip(
+                icon = "↓",
+                selected = selected == "DOWNLOADS",
+                onClick = { onSelected(nextValue("DOWNLOADS")) }
+            )
+
+            SmartCollectionChip(
+                icon = "▶",
+                selected = selected == "SNAPTUBE",
+                onClick = { onSelected(nextValue("SNAPTUBE")) }
+            )
+
+            SmartCollectionChip(
+                icon = "◌",
+                selected = selected == "WHATSAPP",
+                onClick = { onSelected(nextValue("WHATSAPP")) }
+            )
         }
     }
 }
+
+
 
 
 
