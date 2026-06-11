@@ -122,12 +122,12 @@ import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
 import androidx.compose.foundation.Canvas
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
+import android.graphics.drawable.BitmapDrawable
 
 private const val PREFS_NAME = "video_library_prefs"
 private const val KEY_DEFAULT_PLAYER_PACKAGE = "default_video_player_package"
@@ -393,7 +393,7 @@ fun GlassTopTabButton(
     selected: Boolean,
     onClick: () -> Unit
 ) {
-    val iconName = when (text) {
+    val icon = when (text) {
         "▦" -> "videos"
         "▣" -> "folders"
         else -> "grid"
@@ -406,7 +406,7 @@ fun GlassTopTabButton(
     }
 
     OneUiLabeledBarButton(
-        iconName = iconName,
+        icon = iconName,
         label = label,
         selected = selected,
         onClick = onClick
@@ -421,7 +421,7 @@ fun GlassIconButton(
     text: String,
     onClick: () -> Unit
 ) {
-    val iconName = when (text) {
+    val icon = when (text) {
         "⌕" -> "search"
         "☷" -> "list"
         "▤" -> "grid"
@@ -436,7 +436,7 @@ fun GlassIconButton(
     }
 
     OneUiLabeledBarButton(
-        iconName = iconName,
+        icon = iconName,
         label = label,
         selected = false,
         onClick = onClick
@@ -835,7 +835,7 @@ fun GlassSortButton(
 
     Box {
         OneUiLabeledBarButton(
-            iconName = "sort",
+            icon = "sort",
             label = "Sort",
             selected = false,
             onClick = { expanded = true }
@@ -939,14 +939,14 @@ fun OneUiBottomNav(selected: Int, onSelect: (Int) -> Unit) {
     ) {
         GlassBottomTab(
             selected = selected == 0,
-            iconName = "▦",
+            icon = "▦",
             label = "Videos",
             onClick = { onSelect(0) }
         )
 
         GlassBottomTab(
             selected = selected == 1,
-            iconName = "idmp",
+            icon = "idmp",
             label = "Folders",
             onClick = { onSelect(1) }
         )
@@ -1377,9 +1377,40 @@ fun SuperQualityBadge(
     }
 }
 
+fun loadSmartSourceIconBitmap(
+    context: Context,
+    packageNames: List<String>
+): Bitmap? {
+    val pm = context.packageManager
+
+    for (pkg in packageNames) {
+        try {
+            val drawable = pm.getApplicationIcon(pkg)
+
+            if (drawable is BitmapDrawable && drawable.bitmap != null) {
+                return drawable.bitmap
+            }
+
+            val width = if (drawable.intrinsicWidth > 0) drawable.intrinsicWidth else 96
+            val height = if (drawable.intrinsicHeight > 0) drawable.intrinsicHeight else 96
+
+            val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+            val canvas = android.graphics.Canvas(bitmap)
+
+            drawable.setBounds(0, 0, canvas.width, canvas.height)
+            drawable.draw(canvas)
+
+            return bitmap
+        } catch (_: Exception) {
+        }
+    }
+
+    return null
+}
+
 @Composable
-fun SmartCollectionLineIcon(
-    iconName: String,
+fun FallbackSmartSourceIcon(
+    fallbackIconName: String,
     selected: Boolean,
     modifier: Modifier = Modifier
 ) {
@@ -1390,7 +1421,7 @@ fun SmartCollectionLineIcon(
     }
 
     Canvas(modifier = modifier.size(22.dp)) {
-        val strokeWidth = 2.0.dp.toPx()
+        val strokeWidth = 2.dp.toPx()
         val stroke = Stroke(
             width = strokeWidth,
             cap = StrokeCap.Round,
@@ -1400,7 +1431,7 @@ fun SmartCollectionLineIcon(
         val w = size.width
         val h = size.height
 
-        when (iconName) {
+        when (fallbackIconName) {
             "recent" -> {
                 drawCircle(color, w * 0.36f, Offset(w * 0.50f, h * 0.50f), style = stroke)
                 drawLine(color, Offset(w * 0.50f, h * 0.50f), Offset(w * 0.50f, h * 0.28f), strokeWidth, cap = StrokeCap.Round)
@@ -1416,50 +1447,26 @@ fun SmartCollectionLineIcon(
                     close()
                 }
                 drawPath(path, color, style = stroke)
-                drawLine(color, Offset(w * 0.35f, h * 0.50f), Offset(w * 0.65f, h * 0.50f), strokeWidth, cap = StrokeCap.Round)
             }
 
-            "idmp" -> {
+            "folder" -> {
                 drawRoundRect(
                     color = color,
                     topLeft = Offset(w * 0.12f, h * 0.30f),
-                    size = Size(w * 0.76f, h * 0.50f),
+                    size = androidx.compose.ui.geometry.Size(w * 0.76f, h * 0.50f),
                     cornerRadius = CornerRadius(w * 0.10f, h * 0.10f),
                     style = stroke
                 )
                 drawLine(color, Offset(w * 0.20f, h * 0.30f), Offset(w * 0.38f, h * 0.18f), strokeWidth, cap = StrokeCap.Round)
                 drawLine(color, Offset(w * 0.38f, h * 0.18f), Offset(w * 0.55f, h * 0.30f), strokeWidth, cap = StrokeCap.Round)
-                drawLine(color, Offset(w * 0.36f, h * 0.47f), Offset(w * 0.36f, h * 0.66f), strokeWidth, cap = StrokeCap.Round)
-                drawLine(color, Offset(w * 0.50f, h * 0.47f), Offset(w * 0.50f, h * 0.66f), strokeWidth, cap = StrokeCap.Round)
-                drawLine(color, Offset(w * 0.64f, h * 0.47f), Offset(w * 0.64f, h * 0.66f), strokeWidth, cap = StrokeCap.Round)
             }
 
-            "camera" -> {
+            "video" -> {
                 drawRoundRect(
                     color = color,
-                    topLeft = Offset(w * 0.12f, h * 0.28f),
-                    size = Size(w * 0.76f, h * 0.52f),
+                    topLeft = Offset(w * 0.16f, h * 0.22f),
+                    size = androidx.compose.ui.geometry.Size(w * 0.68f, h * 0.56f),
                     cornerRadius = CornerRadius(w * 0.12f, h * 0.12f),
-                    style = stroke
-                )
-                drawCircle(color, w * 0.15f, Offset(w * 0.50f, h * 0.55f), style = stroke)
-                drawLine(color, Offset(w * 0.28f, h * 0.28f), Offset(w * 0.36f, h * 0.18f), strokeWidth, cap = StrokeCap.Round)
-                drawLine(color, Offset(w * 0.36f, h * 0.18f), Offset(w * 0.50f, h * 0.28f), strokeWidth, cap = StrokeCap.Round)
-            }
-
-            "downloads" -> {
-                drawLine(color, Offset(w * 0.50f, h * 0.14f), Offset(w * 0.50f, h * 0.58f), strokeWidth, cap = StrokeCap.Round)
-                drawLine(color, Offset(w * 0.30f, h * 0.42f), Offset(w * 0.50f, h * 0.62f), strokeWidth, cap = StrokeCap.Round)
-                drawLine(color, Offset(w * 0.70f, h * 0.42f), Offset(w * 0.50f, h * 0.62f), strokeWidth, cap = StrokeCap.Round)
-                drawLine(color, Offset(w * 0.25f, h * 0.78f), Offset(w * 0.75f, h * 0.78f), strokeWidth, cap = StrokeCap.Round)
-            }
-
-            "snaptube" -> {
-                drawRoundRect(
-                    color = color,
-                    topLeft = Offset(w * 0.16f, h * 0.20f),
-                    size = Size(w * 0.68f, h * 0.60f),
-                    cornerRadius = CornerRadius(w * 0.14f, h * 0.14f),
                     style = stroke
                 )
                 val play = Path().apply {
@@ -1471,15 +1478,8 @@ fun SmartCollectionLineIcon(
                 drawPath(play, color)
             }
 
-            "whatsapp" -> {
-                drawCircle(color, w * 0.34f, Offset(w * 0.50f, h * 0.45f), style = stroke)
-                val tail = Path().apply {
-                    moveTo(w * 0.34f, h * 0.72f)
-                    lineTo(w * 0.26f, h * 0.88f)
-                    lineTo(w * 0.44f, h * 0.78f)
-                }
-                drawPath(tail, color, style = stroke)
-                drawLine(color, Offset(w * 0.40f, h * 0.42f), Offset(w * 0.58f, h * 0.58f), strokeWidth, cap = StrokeCap.Round)
+            else -> {
+                drawCircle(color, w * 0.34f, Offset(w * 0.50f, h * 0.50f), style = stroke)
             }
         }
     }
@@ -1487,10 +1487,17 @@ fun SmartCollectionLineIcon(
 
 @Composable
 fun SmartCollectionChip(
-    iconName: String,
+    packageNames: List<String>,
+    fallbackIconName: String,
     selected: Boolean = false,
     onClick: () -> Unit = {}
 ) {
+    val context = LocalContext.current
+
+    val appIconBitmap = remember(packageNames) {
+        loadSmartSourceIconBitmap(context, packageNames)
+    }
+
     Surface(
         onClick = onClick,
         modifier = Modifier
@@ -1517,14 +1524,23 @@ fun SmartCollectionChip(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            SmartCollectionLineIcon(
-                iconName = iconName,
-                selected = selected
-            )
+            if (appIconBitmap != null) {
+                Image(
+                    bitmap = appIconBitmap.asImageBitmap(),
+                    contentDescription = null,
+                    modifier = Modifier.size(25.dp)
+                )
+            } else {
+                FallbackSmartSourceIcon(
+                    fallbackIconName = fallbackIconName,
+                    selected = selected
+                )
+            }
         }
     }
 }
 
+@Composable
 fun SmartCollectionStrip(
     modifier: Modifier = Modifier,
     selected: String? = null,
@@ -1556,43 +1572,137 @@ fun SmartCollectionStrip(
             verticalAlignment = Alignment.CenterVertically
         ) {
             SmartCollectionChip(
-                iconName = "recent",
+                packageNames = emptyList(),
+                fallbackIconName = "recent",
                 selected = selected == "RECENT",
                 onClick = { onSelected(nextValue("RECENT")) }
             )
 
             SmartCollectionChip(
-                iconName = "large",
+                packageNames = emptyList(),
+                fallbackIconName = "large",
                 selected = selected == "LARGE",
                 onClick = { onSelected(nextValue("LARGE")) }
             )
 
             SmartCollectionChip(
-                iconName = "idmp",
+                packageNames = listOf(
+                    "idm.internet.download.manager",
+                    "idm.internet.download.manager.plus"
+                ),
+                fallbackIconName = "folder",
                 selected = selected == "IDMP",
                 onClick = { onSelected(nextValue("IDMP")) }
             )
 
             SmartCollectionChip(
-                iconName = "camera",
+                packageNames = listOf(
+                    "com.sec.android.app.camera",
+                    "com.android.camera",
+                    "org.lineageos.aperture"
+                ),
+                fallbackIconName = "folder",
                 selected = selected == "CAMERA",
                 onClick = { onSelected(nextValue("CAMERA")) }
             )
 
             SmartCollectionChip(
-                iconName = "downloads",
+                packageNames = listOf(
+                    "com.google.android.documentsui",
+                    "com.sec.android.app.myfiles"
+                ),
+                fallbackIconName = "folder",
                 selected = selected == "DOWNLOADS",
                 onClick = { onSelected(nextValue("DOWNLOADS")) }
             )
 
             SmartCollectionChip(
-                iconName = "snaptube",
+                packageNames = listOf(
+                    "com.snaptube.premium",
+                    "com.snaptube.app"
+                ),
+                fallbackIconName = "video",
                 selected = selected == "SNAPTUBE",
                 onClick = { onSelected(nextValue("SNAPTUBE")) }
             )
 
             SmartCollectionChip(
-                iconName = "whatsapp",
+                packageNames = listOf(
+                    "com.whatsapp",
+                    "com.whatsapp.w4b"
+                ),
+                fallbackIconName = "video",
+                selected = selected == "WHATSAPP",
+                onClick = { onSelected(nextValue("WHATSAPP")) }
+            )
+        }
+    }
+}
+
+) {
+    fun nextValue(key: String): String? {
+        return if (selected == key) null else key
+    }
+
+    Surface(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp),
+        shape = RoundedCornerShape(28.dp),
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.70f),
+        tonalElevation = 0.dp,
+        shadowElevation = 0.dp,
+        border = BorderStroke(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.28f)
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState())
+                .padding(horizontal = 10.dp, vertical = 7.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            SmartCollectionChip(
+                icon = "recent",
+                selected = selected == "RECENT",
+                onClick = { onSelected(nextValue("RECENT")) }
+            )
+
+            SmartCollectionChip(
+                icon = "large",
+                selected = selected == "LARGE",
+                onClick = { onSelected(nextValue("LARGE")) }
+            )
+
+            SmartCollectionChip(
+                icon = "idmp",
+                selected = selected == "IDMP",
+                onClick = { onSelected(nextValue("IDMP")) }
+            )
+
+            SmartCollectionChip(
+                icon = "camera",
+                selected = selected == "CAMERA",
+                onClick = { onSelected(nextValue("CAMERA")) }
+            )
+
+            SmartCollectionChip(
+                icon = "downloads",
+                selected = selected == "DOWNLOADS",
+                onClick = { onSelected(nextValue("DOWNLOADS")) }
+            )
+
+            SmartCollectionChip(
+                icon = "snaptube",
+                selected = selected == "SNAPTUBE",
+                onClick = { onSelected(nextValue("SNAPTUBE")) }
+            )
+
+            SmartCollectionChip(
+                icon = "whatsapp",
                 selected = selected == "WHATSAPP",
                 onClick = { onSelected(nextValue("WHATSAPP")) }
             )
@@ -2193,7 +2303,7 @@ fun SelectionIconActionButton(
     enabled: Boolean = true,
     onClick: () -> Unit
 ) {
-    val iconName = when (iconText) {
+    val icon = when (iconText) {
         "↗" -> "share"
         "✎" -> "rename"
         "⌫" -> "delete"
@@ -2208,7 +2318,7 @@ fun SelectionIconActionButton(
     }
 
     OneUiLabeledBarButton(
-        iconName = iconName,
+        icon = iconName,
         label = label,
         selected = false,
         enabled = enabled,
@@ -2253,7 +2363,7 @@ fun SelectionActionBar(
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
             OneUiLabeledBarButton(
-                iconName = "move",
+                icon = "move",
                 label = "Move",
                 selected = false,
                 enabled = false,
@@ -2261,7 +2371,7 @@ fun SelectionActionBar(
             )
 
             OneUiLabeledBarButton(
-                iconName = "copy",
+                icon = "copy",
                 label = "Copy",
                 selected = false,
                 enabled = false,
@@ -2269,7 +2379,7 @@ fun SelectionActionBar(
             )
 
             OneUiLabeledBarButton(
-                iconName = "share",
+                icon = "share",
                 label = "Share",
                 selected = false,
                 enabled = true,
@@ -2277,7 +2387,7 @@ fun SelectionActionBar(
             )
 
             OneUiLabeledBarButton(
-                iconName = "rename",
+                icon = "rename",
                 label = "Rename",
                 selected = false,
                 enabled = canRename,
@@ -2285,7 +2395,7 @@ fun SelectionActionBar(
             )
 
             OneUiLabeledBarButton(
-                iconName = "delete",
+                icon = "delete",
                 label = "Delete",
                 selected = false,
                 enabled = true,
@@ -2293,7 +2403,7 @@ fun SelectionActionBar(
             )
 
             OneUiLabeledBarButton(
-                iconName = "more",
+                icon = "more",
                 label = "More",
                 selected = false,
                 enabled = false,
