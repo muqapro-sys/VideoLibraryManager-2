@@ -115,6 +115,9 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.border
 
 private const val PREFS_NAME = "video_library_prefs"
 private const val KEY_DEFAULT_PLAYER_PACKAGE = "default_video_player_package"
@@ -1185,6 +1188,88 @@ private object VideoDeleteScrollMemory {
 }
 
 
+fun videoQualityLabel(width: Int, height: Int): String {
+    val maxSide = kotlin.math.max(width, height)
+    return when {
+        maxSide >= 3840 -> "4K"
+        maxSide >= 1920 -> "FHD"
+        maxSide >= 1280 -> "HD"
+        maxSide > 0 -> "SD"
+        else -> "VIDEO"
+    }
+}
+
+@Composable
+fun SuperVideoMetaChip(
+    text: String
+) {
+    Surface(
+        shape = RoundedCornerShape(999.dp),
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.70f),
+        border = BorderStroke(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.34f)
+        ),
+        tonalElevation = 0.dp,
+        shadowElevation = 0.dp
+    ) {
+        Text(
+            text = text,
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+            fontSize = 10.sp,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1
+        )
+    }
+}
+
+@Composable
+fun SuperQualityBadge(
+    label: String
+) {
+    Surface(
+        shape = RoundedCornerShape(999.dp),
+        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.18f),
+        border = BorderStroke(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.36f)
+        ),
+        tonalElevation = 0.dp,
+        shadowElevation = 0.dp
+    ) {
+        Text(
+            text = label,
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+            fontSize = 10.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.primary,
+            maxLines = 1
+        )
+    }
+}
+
+@Composable
+fun SmartCollectionStrip(
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState())
+            .padding(horizontal = 14.dp, vertical = 6.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        SuperVideoMetaChip("Recent")
+        SuperVideoMetaChip("Large")
+        SuperVideoMetaChip("4K")
+        SuperVideoMetaChip("Camera")
+        SuperVideoMetaChip("Downloads")
+        SuperVideoMetaChip("WhatsApp")
+    }
+}
+
+
 @Composable
 fun VideosScreen(
     videos: List<VideoItem>,
@@ -1350,6 +1435,8 @@ fun VideosScreen(
                 ),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
+        SmartCollectionStrip()
+
                 items(videos, key = { it.id }) { video ->
                     VideoListCard(
                         video = video,
