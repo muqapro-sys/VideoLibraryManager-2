@@ -120,6 +120,14 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.border
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
+import androidx.compose.foundation.Canvas
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.Stroke
 
 private const val PREFS_NAME = "video_library_prefs"
 private const val KEY_DEFAULT_PLAYER_PACKAGE = "default_video_player_package"
@@ -931,14 +939,14 @@ fun OneUiBottomNav(selected: Int, onSelect: (Int) -> Unit) {
     ) {
         GlassBottomTab(
             selected = selected == 0,
-            icon = "▦",
+            iconName = "▦",
             label = "Videos",
             onClick = { onSelect(0) }
         )
 
         GlassBottomTab(
             selected = selected == 1,
-            icon = "▣",
+            iconName = "idmp",
             label = "Folders",
             onClick = { onSelect(1) }
         )
@@ -1370,8 +1378,116 @@ fun SuperQualityBadge(
 }
 
 @Composable
+fun SmartCollectionLineIcon(
+    iconName: String,
+    selected: Boolean,
+    modifier: Modifier = Modifier
+) {
+    val color = if (selected) {
+        MaterialTheme.colorScheme.primary
+    } else {
+        MaterialTheme.colorScheme.onSurfaceVariant
+    }
+
+    Canvas(modifier = modifier.size(22.dp)) {
+        val strokeWidth = 2.0.dp.toPx()
+        val stroke = Stroke(
+            width = strokeWidth,
+            cap = StrokeCap.Round,
+            join = StrokeJoin.Round
+        )
+
+        val w = size.width
+        val h = size.height
+
+        when (iconName) {
+            "recent" -> {
+                drawCircle(color, w * 0.36f, Offset(w * 0.50f, h * 0.50f), style = stroke)
+                drawLine(color, Offset(w * 0.50f, h * 0.50f), Offset(w * 0.50f, h * 0.28f), strokeWidth, cap = StrokeCap.Round)
+                drawLine(color, Offset(w * 0.50f, h * 0.50f), Offset(w * 0.66f, h * 0.58f), strokeWidth, cap = StrokeCap.Round)
+            }
+
+            "large" -> {
+                val path = Path().apply {
+                    moveTo(w * 0.50f, h * 0.12f)
+                    lineTo(w * 0.88f, h * 0.50f)
+                    lineTo(w * 0.50f, h * 0.88f)
+                    lineTo(w * 0.12f, h * 0.50f)
+                    close()
+                }
+                drawPath(path, color, style = stroke)
+                drawLine(color, Offset(w * 0.35f, h * 0.50f), Offset(w * 0.65f, h * 0.50f), strokeWidth, cap = StrokeCap.Round)
+            }
+
+            "idmp" -> {
+                drawRoundRect(
+                    color = color,
+                    topLeft = Offset(w * 0.12f, h * 0.30f),
+                    size = Size(w * 0.76f, h * 0.50f),
+                    cornerRadius = CornerRadius(w * 0.10f, h * 0.10f),
+                    style = stroke
+                )
+                drawLine(color, Offset(w * 0.20f, h * 0.30f), Offset(w * 0.38f, h * 0.18f), strokeWidth, cap = StrokeCap.Round)
+                drawLine(color, Offset(w * 0.38f, h * 0.18f), Offset(w * 0.55f, h * 0.30f), strokeWidth, cap = StrokeCap.Round)
+                drawLine(color, Offset(w * 0.36f, h * 0.47f), Offset(w * 0.36f, h * 0.66f), strokeWidth, cap = StrokeCap.Round)
+                drawLine(color, Offset(w * 0.50f, h * 0.47f), Offset(w * 0.50f, h * 0.66f), strokeWidth, cap = StrokeCap.Round)
+                drawLine(color, Offset(w * 0.64f, h * 0.47f), Offset(w * 0.64f, h * 0.66f), strokeWidth, cap = StrokeCap.Round)
+            }
+
+            "camera" -> {
+                drawRoundRect(
+                    color = color,
+                    topLeft = Offset(w * 0.12f, h * 0.28f),
+                    size = Size(w * 0.76f, h * 0.52f),
+                    cornerRadius = CornerRadius(w * 0.12f, h * 0.12f),
+                    style = stroke
+                )
+                drawCircle(color, w * 0.15f, Offset(w * 0.50f, h * 0.55f), style = stroke)
+                drawLine(color, Offset(w * 0.28f, h * 0.28f), Offset(w * 0.36f, h * 0.18f), strokeWidth, cap = StrokeCap.Round)
+                drawLine(color, Offset(w * 0.36f, h * 0.18f), Offset(w * 0.50f, h * 0.28f), strokeWidth, cap = StrokeCap.Round)
+            }
+
+            "downloads" -> {
+                drawLine(color, Offset(w * 0.50f, h * 0.14f), Offset(w * 0.50f, h * 0.58f), strokeWidth, cap = StrokeCap.Round)
+                drawLine(color, Offset(w * 0.30f, h * 0.42f), Offset(w * 0.50f, h * 0.62f), strokeWidth, cap = StrokeCap.Round)
+                drawLine(color, Offset(w * 0.70f, h * 0.42f), Offset(w * 0.50f, h * 0.62f), strokeWidth, cap = StrokeCap.Round)
+                drawLine(color, Offset(w * 0.25f, h * 0.78f), Offset(w * 0.75f, h * 0.78f), strokeWidth, cap = StrokeCap.Round)
+            }
+
+            "snaptube" -> {
+                drawRoundRect(
+                    color = color,
+                    topLeft = Offset(w * 0.16f, h * 0.20f),
+                    size = Size(w * 0.68f, h * 0.60f),
+                    cornerRadius = CornerRadius(w * 0.14f, h * 0.14f),
+                    style = stroke
+                )
+                val play = Path().apply {
+                    moveTo(w * 0.43f, h * 0.38f)
+                    lineTo(w * 0.43f, h * 0.64f)
+                    lineTo(w * 0.66f, h * 0.51f)
+                    close()
+                }
+                drawPath(play, color)
+            }
+
+            "whatsapp" -> {
+                drawCircle(color, w * 0.34f, Offset(w * 0.50f, h * 0.45f), style = stroke)
+                val tail = Path().apply {
+                    moveTo(w * 0.34f, h * 0.72f)
+                    lineTo(w * 0.26f, h * 0.88f)
+                    lineTo(w * 0.44f, h * 0.78f)
+                }
+                drawPath(tail, color, style = stroke)
+                drawLine(color, Offset(w * 0.40f, h * 0.42f), Offset(w * 0.58f, h * 0.58f), strokeWidth, cap = StrokeCap.Round)
+            }
+        }
+    }
+}
+
+@Composable
 fun SmartCollectionChip(
-    icon: String,
+    iconName: String,
     selected: Boolean = false,
     onClick: () -> Unit = {}
 ) {
@@ -1401,59 +1517,14 @@ fun SmartCollectionChip(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = icon,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = if (selected) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant
-                },
-                maxLines = 1
+            SmartCollectionLineIcon(
+                iconName = iconName,
+                selected = selected
             )
         }
     }
 }
 
-
-) {
-    Surface(
-        onClick = onClick,
-        shape = RoundedCornerShape(999.dp),
-        color = if (selected) {
-            MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)
-        } else {
-            MaterialTheme.colorScheme.surface.copy(alpha = 0.58f)
-        },
-        border = BorderStroke(
-            width = 1.dp,
-            color = if (selected) {
-                MaterialTheme.colorScheme.primary.copy(alpha = 0.34f)
-            } else {
-                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.30f)
-            }
-        ),
-        tonalElevation = 0.dp,
-        shadowElevation = 0.dp
-    ) {
-        Text(
-            text = title,
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-            fontSize = 12.sp,
-            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
-            color = if (selected) {
-                MaterialTheme.colorScheme.primary
-            } else {
-                MaterialTheme.colorScheme.onSurfaceVariant
-            },
-            maxLines = 1
-        )
-    }
-}
-
-
-@Composable
 fun SmartCollectionStrip(
     modifier: Modifier = Modifier,
     selected: String? = null,
@@ -1485,43 +1556,43 @@ fun SmartCollectionStrip(
             verticalAlignment = Alignment.CenterVertically
         ) {
             SmartCollectionChip(
-                icon = "◷",
+                iconName = "recent",
                 selected = selected == "RECENT",
                 onClick = { onSelected(nextValue("RECENT")) }
             )
 
             SmartCollectionChip(
-                icon = "◆",
+                iconName = "large",
                 selected = selected == "LARGE",
                 onClick = { onSelected(nextValue("LARGE")) }
             )
 
             SmartCollectionChip(
-                icon = "▣",
+                iconName = "idmp",
                 selected = selected == "IDMP",
                 onClick = { onSelected(nextValue("IDMP")) }
             )
 
             SmartCollectionChip(
-                icon = "◉",
+                iconName = "camera",
                 selected = selected == "CAMERA",
                 onClick = { onSelected(nextValue("CAMERA")) }
             )
 
             SmartCollectionChip(
-                icon = "↓",
+                iconName = "downloads",
                 selected = selected == "DOWNLOADS",
                 onClick = { onSelected(nextValue("DOWNLOADS")) }
             )
 
             SmartCollectionChip(
-                icon = "▶",
+                iconName = "snaptube",
                 selected = selected == "SNAPTUBE",
                 onClick = { onSelected(nextValue("SNAPTUBE")) }
             )
 
             SmartCollectionChip(
-                icon = "◌",
+                iconName = "whatsapp",
                 selected = selected == "WHATSAPP",
                 onClick = { onSelected(nextValue("WHATSAPP")) }
             )
