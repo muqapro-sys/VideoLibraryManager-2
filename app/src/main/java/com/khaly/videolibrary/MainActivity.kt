@@ -300,7 +300,11 @@ fun VideoLibraryApp(viewModel: VideoLibraryViewModel) {
                         onOpenFolder = { viewModel.openFolder(it.name) }
                     )
 
-                    else -> VideosScreen(
+                    else -> Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            SmartCollectionStrip()
+            VideosScreen(
                         videos = state.filteredVideos,
                         favorites = state.favorites,
                         viewMode = state.viewMode,
@@ -319,6 +323,7 @@ fun VideoLibraryApp(viewModel: VideoLibraryViewModel) {
                         onFavorite = { viewModel.toggleFavorite(it.id) },
                         onRefresh = viewModel::scanVideos
                     )
+        }
                 }
             }
 
