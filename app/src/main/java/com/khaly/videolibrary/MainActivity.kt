@@ -1435,8 +1435,6 @@ fun VideosScreen(
                 ),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-        SmartCollectionStrip()
-
                 items(videos, key = { it.id }) { video ->
                     VideoListCard(
                         video = video,
